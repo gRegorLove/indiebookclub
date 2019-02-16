@@ -6,12 +6,12 @@ indiebookclub requires PHP, MySQL, and Composer. It is intended to be installed 
 
 * Set the domain’s document root to the `/public` directory
 * Configure the server to route requests through `/public/index.php` if they don’t match a file
-** If you are running Apache, do this by renaming `/public/htaccess.txt` to `/.htaccess`
+  * If you are running Apache, do this by renaming `/public/htaccess.txt` to `/.htaccess`
 * Set up MySQL tables using `/schema/schema.sql`
 * Run `composer install`
 * Rename `/.env.example` to `/.env` and fill in the hostname, base URL, and MySQL connection information
 
-## Environment variables
+## Environment Variables
 In development, phpdotenv will load the `.env` file on each request to populate environment variables. In production, it is recommended to set the actual environment variables to avoid that overhead. Set the environment variable `APP_ENV=production` to prevent loading the `.env` file.
 
 ## Maintenance Mode
@@ -22,7 +22,7 @@ To enable maintenance mode, update `/app/settings.php`. Set `offline` to `true` 
 ## Development Mode
 Development mode displays all error messages and restricts login to a single domain. Unlike maintenance mode, public pages remain visible and do not display a maintenance message.
 
-To enable development mode, set the environment variable `APP_ENV` to anything other than `dev` (or anything other than `production`). Then update `/app/settings.php` and set `developer_domain` to the domain you want to enable logins for.
+To enable development mode, set the environment variable `APP_ENV` to `dev` (or anything other than `production`). Then update `/app/settings.php` and set `developer_domain` to the domain you want to enable logins for.
 
 # Credits
 * Inspired by and using open source code from [Aaron Parecki’s](https://aaronparecki.com) [Teacup](https://teacup.p3k.io/) and [Quill](https://quill.p3k.io/).
