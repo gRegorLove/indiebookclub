@@ -1,0 +1,15 @@
+
+	<?php $this->import('partials/header'); ?>
+
+	<ul class="entries">
+
+<?php
+	if (empty($cached_entry)) {
+		$this->import('partials/entry', ['entry' => $entry, 'user' => $user]);
+	} else {
+		echo $cached_entry;
+	}
+?>
+
+	</ul>
+

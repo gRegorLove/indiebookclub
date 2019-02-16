@@ -1,0 +1,45 @@
+
+    <?php $this->import('partials/header'); ?>
+
+    <div class="h-feed">
+
+        <h2 class="feed-name p-name"><?=$feed_name;?></h2>
+
+        <ul class="entries">
+
+<?php
+
+    foreach ($entries as $entry) {
+        $this->import('partials/entry', ['entry' => $entry, 'user' => $user]);
+    }
+
+?>
+
+        </ul>
+
+    </div>
+
+    <?php if (count($entries) == 0): ?>
+        <div class="bs-callout bs-callout-warning">There are no entries yet!</div>
+    <?php endif; ?>
+
+    <nav class="entries-navigation">
+        <div class="older">
+<?php
+    $profile_url = $utils->router->pathFor('profile', ['domain' => $user->profile_slug]);
+
+    if ($older) {
+        echo sprintf('<a href="%s?before=%s" rel="prev">← Older</a>', $profile_url, $older);
+    }
+?>
+        </div>
+
+        <div class="newer">
+<?php
+    if ($newer) {
+        echo sprintf('<a href="%s?before=%s" rel="next">Newer →</a>', $profile_url, $newer);
+    }
+?>
+        </div>
+    </nav>
+
