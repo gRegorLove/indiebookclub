@@ -1,0 +1,25 @@
+
+	<?php $this->import('partials/header'); ?>
+
+	<?php if ($is_micropub_user): ?>
+
+		<h2> Awesome! We found your Micropub endpoint! </h2>
+
+		<p> Click below to authorize this app to create posts at your Micropub endpoint. </p>
+
+	<?php else: ?>
+
+		<h2> Would you like to use a hosted account? </h2>
+
+		<p> It looks like your site doesn’t support <a href="https://micropub.net">Micropub</a>. You can still use this site to track what you are reading and the posts will live here instead of on your own site. </p>
+
+	<?php endif; ?>
+
+	<p> <a href="<?=$authorization_url;?>"><?= $is_micropub_user ? 'Authorize' : 'Sign In' ?></a> </p>
+
+	<div class="callout">
+		Your authorization endpoint: <code><?= $authorization_endpoint ?: 'none' ?></code><br>
+		Your token endpoint: <code><?= $token_endpoint ?: 'none' ?></code><br>
+		Your Micropub endpoint: <code><?= $micropub_endpoint ?: 'none' ?></code>
+	</div>
+

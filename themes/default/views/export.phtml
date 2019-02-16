@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title><?=$feed_name;?></title>
+    <base href="<?=getenv('IBC_BASE_URL');?>">
+    <style>
+<?=file_get_contents(APP_DIR . '/public/css/style.css');?>
+    </style>
+</head>
+<body>
+
+<div class="h-feed">
+    <h2 class="feed-name p-name"><?=$feed_name;?></h2>
+    <ul class="entries">
+
+<?php
+    foreach ($entries as $entry) {
+        $this->import('partials/entry', ['entry' => $entry, 'user' => $user]);
+    }
+?>
+
+    </ul>
+</div>
+
+</body>
+</html>

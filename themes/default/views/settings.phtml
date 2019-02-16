@@ -1,0 +1,46 @@
+
+	<?php $this->import('partials/header'); ?>
+
+	<div class="content">
+
+		<h2> Settings </h2>
+		<p> You are signed in as <b><?=$user->url;?></b>. <a href="<?=$utils->router->pathFor('signout');?>">Sign Out?</a> <span class="help-block">indiebookclub v<?=$version;?></span> </p>
+
+<?php if ($user->micropub_endpoint): ?>
+
+		<h3> Micropub </h3>
+
+		<p> <b>scope</b><br>
+			<span class="help-block">Should be a space-separated list of permissions including “create” or “post”</span>
+			<?=$user->token_scope;?> </p>
+
+		<p> <b>micropub endpoint</b><br>
+			<span class="help-block">Should be a URL</span>
+			<?=$user->micropub_endpoint;?> </p>
+
+		<p> <b>access token</b><br>
+			<span class="help-block">Should be greater than length 0</span>
+			String of length <b><?= strlen($utils->get_access_token()) ?></b><?= (strlen($utils->get_access_token()) > 0) ? (', ending in <code>' . substr($utils->get_access_token(), -7) . '</code>') : '' ?> </p>
+
+		<?php if ($user->last_micropub_response): ?>
+
+		<p> <b>Last response from your Micropub endpoint</b><br>
+		<textarea readonly style="width: 100%; min-height: 240px;"><?= htmlspecialchars($user->last_micropub_response); ?></textarea>
+
+		<?php endif; ?>
+
+		<h3> Reset Login </h3>
+
+		<p> Clicking this button will tell your token endpoint to revoke the token. indiebookclub will forget the access token stored, forget all cached endpoints, and sign you out. If you sign back in, you will start over and see the authorization screen for your endpoints. </p>
+
+		<form method="get" action="<?=$utils->router->pathFor('auth_reset');?>"><input type="submit" class="btn btn-default" value="Reset Login"></form>
+
+<?php endif; ?>
+
+		<h3> Export Posts </h3>
+		<p> Click this button to download an HTML export of all your posts. </p>
+
+		<form method="get" action="<?=$utils->router->pathFor('export');?>"><input type="submit" class="btn btn-default" value="Export Posts"></form>
+
+	</div>
+
