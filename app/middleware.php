@@ -22,6 +22,7 @@ $app->add(function ($request, $response, $next) use ($container) {
     $authenticated_route_names = [
         'new',
         'settings',
+        'settings_update',
         'auth_reset',
     ];
 
@@ -35,6 +36,16 @@ $app->add(function ($request, $response, $next) use ($container) {
     }
 
     return $next($request, $response);
+});
+
+// Security headers
+$app->add(function ($request, $response, $next) {
+    $response = $next($request, $response);
+    return $response
+        ->withHeader('Strict-Transport-Security', 'max-age=10368000; includeSubDomains')
+        ->withHeader('X-Frame-Options', 'SAMEORIGIN')
+        ->withHeader('X-XSS-Protection', '1; mode=block')
+        ->withHeader('X-Content-Type-Options', 'nosniff');
 });
 
 // 404 Handler

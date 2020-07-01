@@ -5,7 +5,7 @@
 
 <?php
 	if (empty($cached_entry)) {
-		$this->import('partials/entry', ['entry' => $entry, 'user' => $user]);
+		$this->import('partials/entry', ['entry' => $entry, 'profile' => $profile]);
 	} else {
 		echo $cached_entry;
 	}

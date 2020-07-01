@@ -273,6 +273,28 @@ class Utils
         return '';
     }
 
+    public function get_visibility_options($user) {
+
+        if (!$user->supported_visibility) {
+            return ['Public'];
+        }
+
+        $supported = json_decode($user->supported_visibility);
+
+        foreach (['public', 'private', 'unlisted'] as $value) {
+            if (in_array($value, $supported)) {
+                $options[] = ucfirst($value);
+            }
+        }
+
+        # IBC does not support any of the listed options
+        if (!$options) {
+            $options = ['Public'];
+        }
+
+        return $options;
+    }
+
     /**
      * Get access_token from $_SESSION
      */
@@ -299,6 +321,22 @@ class Utils
                 $user->photo_url = Mf2helper\getPlaintext($hcard, 'photo');
             }
         }
+    }
+
+    /**
+     * Append query params to a URL
+     */
+    public function build_url($url, $params = []) {
+        if (!$params) {
+            return $url;
+        }
+
+        $join_char = '?';
+        if (parse_url($url, PHP_URL_QUERY)) {
+            $join_char = '&';
+        }
+
+        return $url . $join_char . http_build_query($params);
     }
 
     /**
@@ -369,14 +407,7 @@ class Utils
      * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
      */
     public function micropub_get($endpoint, $params, $access_token) {
-        $url = parse_url($endpoint);
-
-        if (!k($url, 'query')) {
-            $url['query'] = http_build_query($params);
-        } else {
-            $url['query'] .= '&' . http_build_query($params);
-        }
-        $endpoint = http_build_url($url);
+        $endpoint = $this->build_url($endpoint, $params);
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $endpoint);

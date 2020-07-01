@@ -4,11 +4,54 @@
 	<div class="content">
 
 		<h2> Settings </h2>
+<?php
+	if (array_key_exists('updated', $_GET)) {
+		echo sprintf('<p class="alert alert-success"> Settings updated </p>');
+	}
+?>
+
 		<p> You are signed in as <b><?=$user->url;?></b>. <a href="<?=$utils->router->pathFor('signout');?>">Sign Out?</a> <span class="help-block">indiebookclub v<?=$version;?></span> </p>
 
 <?php if ($user->micropub_endpoint): ?>
 
 		<h3> Micropub </h3>
+
+<?php
+	$display_visibility_options = '';
+	foreach ($options_visibility as $label) {
+		$value = strtolower($label);
+		$selected = $utils->markSelected($value, $user->default_visibility, false);
+		$display_visibility_options .= sprintf('<option value="%s"%s>%s</option>',
+			$value,
+			$selected,
+			$label
+		);
+	}
+
+	$display_visibility = 'None indicated. Defaults to: public';
+	if ($user->supported_visibility) {
+		if ($supported = json_decode($user->supported_visibility)) {
+			$display_visibility = implode(', ', $supported);
+		}
+	}
+?>
+
+		<form method="post" action="<?=$utils->router->pathFor('settings_update');?>">
+		<p>
+			<b><label for="i_default_visibility">Default Visibility:</label></b><br>
+			<select name="default_visibility" id="i_default_visibility" required>
+				<?=$display_visibility_options;?>
+			</select>
+			<span class="help-block">The new post form will default to this setting</span>
+		</p>
+		<input type="submit" class="btn btn-default" value="Update">
+		</form>
+
+		<p>
+			<b>visibility</b><br>
+			<span class="help-block">The visibility options your site supports</span>
+			<?=$display_visibility;?>
+		</p>
 
 		<p> <b>scope</b><br>
 			<span class="help-block">Should be a space-separated list of permissions including “create” or “post”</span>

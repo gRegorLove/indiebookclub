@@ -321,6 +321,18 @@ class AuthController extends Controller
             $skipDebugScreen = true;
         }
 
+        if ($micropub_endpoint) {
+            $config_response = $this->utils->micropub_get(
+                $micropub_endpoint,
+                ['q' => 'config'],
+                $this->utils->get_access_token()
+            );
+
+            if (array_key_exists('visibility', $config_response['data'])) {
+                $user->supported_visibility = json_encode($config_response['data']['visibility']);
+            }
+        }
+
         $user->micropub_endpoint = $micropub_endpoint;
         $user->token_scope = $token['auth']['scope'];
         $user->set_expr('last_login', 'NOW()');

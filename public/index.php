@@ -33,6 +33,7 @@ $app->map(['GET', 'POST'], '/new', 'IbcController:new')->setName('new');
 $app->get('/isbn/{isbn:\d+}', 'IbcController:isbn')->setName('isbn');
 
 $app->get('/settings', 'UsersController:settings')->setName('settings');
+$app->post('/settings/update', 'UsersController:settings_update')->setName('settings_update');
 $app->get('/users/{domain:[a-zA-Z0-9\.-]+\.[a-z]+}', 'UsersController:profile')->setName('profile');
 $app->get('/users/{domain:[a-zA-Z0-9\.-]+\.[a-z]+}/{entry:\d+}', 'UsersController:entry')->setName('entry');
 $app->get('/export', 'UsersController:export')->setName('export');

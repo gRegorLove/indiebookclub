@@ -146,6 +146,12 @@ input, select {
 	border-radius: 4px;
 }
 
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
 .alert-warning {
 	color: #8a6d3b;
 	background-color: #fcf8e3;

@@ -50,7 +50,9 @@ abstract class Controller
      */
     public function get_user() {
         try {
-            return ORM::for_table('users')->find_one($_SESSION['user_id']);
+            return ORM::for_table('users')
+                ->where('id', $_SESSION['user_id'])
+                ->find_one();
         } catch (PDOException $e) {
             $this->logger->error(
                 'Error getting user. ' . $e->getMessage(),

@@ -88,6 +88,8 @@ class IbcController extends Controller
             }
         }
 
+        $options_visibility = $this->utils->get_visibility_options($user);
+
         $read_status = strtolower($request->getQueryParam('read-status', null));
 
         if (!in_array($read_status, ['to-read', 'reading', 'finished'])) {
@@ -112,12 +114,14 @@ class IbcController extends Controller
             $response,
             'new-post',
             [
+                'user' => $user,
                 'read_status' => $read_status,
                 'read_title' => $read_title,
                 'read_authors' => $read_authors,
                 'read_isbn' => $read_isbn,
                 'read_doi' => $read_doi,
                 'read_tags' => $read_tags,
+                'options_visibility' => $options_visibility,
                 'micropub_endpoint' => $user->micropub_endpoint,
                 'micropub_media_endpoint' => $user->micropub_media_endpoint,
                 'token_scope' => $user->token_scope,
@@ -138,16 +142,7 @@ class IbcController extends Controller
         $entries = ORM::for_table('entries')
             ->table_alias('e')
             ->select_many(
-                'e.id',
-                'e.user_id',
-                'e.published',
-                'e.tz_offset',
-                'e.read_status',
-                'e.title',
-                'e.authors',
-                'e.isbn',
-                'e.url',
-                'e.canonical_url',
+                'e.*',
                 ['user_url' => 'u.url'],
                 ['user_profile_slug' => 'u.profile_slug'],
                 ['user_photo_url' => 'u.photo_url'],
@@ -155,6 +150,7 @@ class IbcController extends Controller
             )
             ->join('users', ['e.user_id', '=', 'u.id'], 'u')
             ->where('e.isbn', $args['isbn'])
+            ->where('visibility', 'public')
             ->order_by_desc('e.published')
             ->limit($per_page);
 
@@ -221,7 +217,7 @@ class IbcController extends Controller
      * @return bool
      */
     protected function validate_post_request($data) {
-        $whitelist_fields = array_fill_keys([
+        $allowlist = array_fill_keys([
             'read_status',
             'title',
             'authors',
@@ -229,10 +225,11 @@ class IbcController extends Controller
             'doi',
             'isbn',
             'tags',
+            'visibility',
             'tzoffset',
         ], 0);
 
-        if (count(array_diff_key($data, $whitelist_fields)) > 0) {
+        if (count(array_diff_key($data, $allowlist)) > 0) {
             return false;
         }
 
@@ -314,6 +311,7 @@ class IbcController extends Controller
             $entry->title = $data['title'];
             $entry->authors = $data['authors'];
             $entry->category = $this->utils->normalize_category($data['tags']);
+            $entry->visibility = $data['visibility'];
             $entry->save();
             return $entry;
         } catch (PDOException $e) {
@@ -447,7 +445,8 @@ class IbcController extends Controller
         $properties = [
             'summary' => [$summary],
             'read-status' => [$data['read_status']],
-            'read-of' => [$cite]
+            'read-of' => [$cite],
+            'visibility' => [$data['visibility']],
         ];
 
         if ($data['tags']) {

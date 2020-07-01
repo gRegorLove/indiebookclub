@@ -15,6 +15,22 @@
         );
     }
 
+    $display_visibility = '';
+    if ($entry->visibility != 'public') {
+        $icon = '';
+        switch ($entry->visibility) {
+            case 'private':
+                $icon = '🔒';
+            break;
+
+            case 'unlisted':
+                $icon = '👻';
+            break;
+        }
+
+        $display_visibility = sprintf('<div class="tags">Visibility: %s %s</div>', $entry->visibility, $icon);
+    }
+
     if ($entry->category) {
         $tags = explode(',', $entry->category);
         foreach ($tags as $tag) {
@@ -24,12 +40,12 @@
     }
 
     $entry_date = $utils->get_entry_date($entry);
-    $entry_url = $utils->get_entry_url($entry, $user);
+    $entry_url = $utils->get_entry_url($entry, $profile);
 ?>
 
 <li class="h-entry">
 
-<?php $this->import('partials/author-block', ['entry' => $entry, 'user' => $user]); ?>
+<?php $this->import('partials/author-block', ['entry' => $entry, 'user' => $profile]); ?>
 
     <div class="content">
 
@@ -41,6 +57,7 @@
             <a href="<?= $entry_url; ?>" class="<?= $utils->get_url_microformats($entry); ?>"><time class="dt-published" datetime="<?= $entry_date->format('Y-m-d H:i:sP') ?>"><?= $entry_date->format('F j, Y g:ia P') ?></time></a>
         </div>
         <?=$display_tags;?>
+        <?=$display_visibility;?>
 
     </div>
 
