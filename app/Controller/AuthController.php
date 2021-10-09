@@ -1,6 +1,4 @@
 <?php
-namespace App\Controller;
-
 /**
  * Handles authentication and signout.
  *
@@ -14,16 +12,21 @@ namespace App\Controller;
  * @see https://github.com/aaronpk/Teacup
  */
 
-use \ORM;
-use \Psr\Http\Message\ResponseInterface as Response;
-use \Psr\Http\Message\ServerRequestInterface as Request;
+declare(strict_types=1);
+
+namespace App\Controller;
+
+use ORM;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 class AuthController extends Controller
 {
     /**
      * Route that starts the authentication process
      */
-    public function start(Request $request, Response $response, array $args) {
+    public function start(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    {
         $params = $request->getQueryParams();
 
         // Attempt to normalize the 'me' parameter or display an error.
@@ -151,7 +154,8 @@ class AuthController extends Controller
     /**
      * Route that handles authentication callback
      */
-    public function callback(Request $request, Response $response, array $args) {
+    public function callback(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    {
         $params = $request->getQueryParams();
 
         // Missing auth state in session; start the login again.
@@ -360,7 +364,8 @@ class AuthController extends Controller
     /**
      * Route that resets the login
      */
-    public function reset(Request $request, Response $response, array $args) {
+    public function reset(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    {
         $user = $this->get_user();
 
         $this->utils->revoke_micropub_token(
@@ -388,7 +393,8 @@ class AuthController extends Controller
     /**
      * Route that signs out the user
      */
-    public function signout(Request $request, Response $response, array $args) {
+    public function signout(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    {
         $user = $this->get_user();
 
         $this->utils->revoke_micropub_token(

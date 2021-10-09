@@ -1,6 +1,4 @@
 <?php
-namespace App\Controller;
-
 /**
  * Handles core indiebookclub functions.
  *
@@ -15,20 +13,22 @@ namespace App\Controller;
  * @see https://github.com/aaronpk/Teacup
  */
 
-use \DateTime;
-use \Mwhite\PhpIsbn\Isbn;
-use \ORM;
-use \PDOException;
-use \Psr\Http\Message\ResponseInterface as Response;
-use \Psr\Http\Message\ServerRequestInterface as Request;
+namespace App\Controller;
 
+use DateTime;
+use Mwhite\PhpIsbn\Isbn;
+use ORM;
+use PDOException;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 class IbcController extends Controller
 {
     /**
      * Route that handles the new post process
      */
-    public function new(Request $request, Response $response, array $args) {
+    public function new(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    {
         $user = $this->get_user();
         $errors = [];
 
@@ -135,7 +135,8 @@ class IbcController extends Controller
     /**
      * Route that handles the ISBN stream
      */
-    public function isbn(Request $request, Response $response, array $args) {
+    public function isbn(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    {
         $params = $request->getQueryParams();
         $per_page = 10;
 
@@ -241,7 +242,8 @@ class IbcController extends Controller
      * @param array $data
      * @return array
      */
-    protected function validate_new_post($data) {
+    protected function validate_new_post($data)
+    {
         $errors = [];
 
         if (!$data['read_status']) {
@@ -265,7 +267,8 @@ class IbcController extends Controller
      * @param int $user_id
      * @return bool
      */
-    protected function add_book($isbn, $user_id) {
+    protected function add_book($isbn, $user_id)
+    {
         try {
             $book = ORM::for_table('books')
                 ->where('isbn', $isbn)
@@ -298,7 +301,8 @@ class IbcController extends Controller
      * @param array $data
      * @return ORM|bool
      */
-    protected function add_entry($data) {
+    protected function add_entry($data)
+    {
         try {
             $entry = ORM::for_table('entries')->create();
             $published = new DateTime();
@@ -328,7 +332,8 @@ class IbcController extends Controller
      * @param int $id
      * @return bool
      */
-    protected function cache_entry($id) {
+    protected function cache_entry($id)
+    {
         $entry = ORM::for_table('entries')
             ->where('id', $id)
             ->find_one();
@@ -382,7 +387,8 @@ class IbcController extends Controller
      * @copyright 2014 Aaron Parecki
      * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
      */
-    protected function add_micropub_response($mp_response, &$user, &$entry) {
+    protected function add_micropub_response($mp_response, &$user, &$entry)
+    {
         try {
             $user->last_micropub_response = $mp_response['response'];
             $user->save();
@@ -411,7 +417,8 @@ class IbcController extends Controller
      * @param array $data
      * @return array
      */
-    protected function build_micropub_request($data) {
+    protected function build_micropub_request($data)
+    {
         $summary = sprintf('%s: %s',
             $this->utils->get_read_status_for_humans($data['read_status']),
             $data['title']

@@ -1,6 +1,4 @@
 <?php
-namespace App\Controller;
-
 /**
  * Handles user-specific functionality.
  *
@@ -9,17 +7,20 @@ namespace App\Controller;
  * @license https://opensource.org/licenses/MIT MIT
  */
 
-use \DateTime;
-use \ORM;
-use \Psr\Http\Message\ResponseInterface as Response;
-use \Psr\Http\Message\ServerRequestInterface as Request;
+namespace App\Controller;
+
+use DateTime;
+use ORM;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 class UsersController extends Controller
 {
     /**
      * Route that handles the profile stream
      */
-    public function profile(Request $request, Response $response, array $args) {
+    public function profile(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    {
         $profile = $this->get_user_by_slug($args['domain']);
 
         if (!$profile) {
@@ -99,7 +100,8 @@ class UsersController extends Controller
     /**
      * Route that handles an individual entry
      */
-    public function entry(Request $request, Response $response, array $args) {
+    public function entry(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    {
         $profile = $this->get_user_by_slug($args['domain']);
 
         if (!$profile) {
@@ -154,7 +156,8 @@ class UsersController extends Controller
     /**
      * Route that handles the settings page
      */
-    public function settings(Request $request, Response $response, array $args) {
+    public function settings(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    {
         $user = $this->get_user();
         $options_visibility = $this->utils->get_visibility_options($user);
 
@@ -173,7 +176,8 @@ class UsersController extends Controller
     /**
      * Route that handles the settings/update POST request
      */
-    public function settings_update(Request $request, Response $response, array $args) {
+    public function settings_update(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    {
         $data = $request->getParsedBody();
 
         if (!$this->validate_post_request($data)) {
@@ -199,7 +203,8 @@ class UsersController extends Controller
     /**
      * Route that handles the export page
      */
-    public function export(Request $request, Response $response, array $args) {
+    public function export(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    {
         $user = $this->get_user();
 
         if (!$user) {
@@ -287,7 +292,8 @@ class UsersController extends Controller
      * @param array $data
      * @return bool
      */
-    protected function validate_post_request($data) {
+    protected function validate_post_request($data)
+    {
         $allowlist = array_fill_keys([
             'default_visibility',
         ], 0);
@@ -304,7 +310,8 @@ class UsersController extends Controller
      * @param array $data
      * @return array
      */
-    protected function validate_settings($data) {
+    protected function validate_settings($data)
+    {
         $errors = [];
 
         if (array_key_exists('default_visibility', $data)) {
@@ -321,7 +328,8 @@ class UsersController extends Controller
      * @param int $id
      * @return bool
      */
-    protected function update_settings($data) {
+    protected function update_settings($data)
+    {
         try {
             $user = $this->get_user();
 

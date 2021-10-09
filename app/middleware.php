@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 // Maintenance mode
 $app->add(function ($request, $response, $next) use ($container) {
     if ($this->get('settings')['offline'] && $_SERVER['REMOTE_ADDR'] != $this->settings['developer_ip']) {

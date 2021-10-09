@@ -1,12 +1,15 @@
 <?php
-use \App\Controller\AuthController;
-use \App\Controller\IbcController;
-use \App\Controller\PageController;
-use \App\Controller\UsersController;
-use \App\Helper\Utils;
-use \Coreorm\Slim3\Theme;
-use \Monolog\Handler\StreamHandler;
-use \Monolog\Logger;
+
+declare(strict_types=1);
+
+use App\Controller\AuthController;
+use App\Controller\IbcController;
+use App\Controller\PageController;
+use App\Controller\UsersController;
+use App\Helper\Utils;
+use Coreorm\Slim3\Theme;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 
 ORM::configure('mysql:host=' . getenv('IBC_DB_HOST') . ';dbname=' . getenv('IBC_DB_NAME'));
 ORM::configure('username', getenv('IBC_DB_USERNAME'));

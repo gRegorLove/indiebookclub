@@ -1,6 +1,4 @@
 <?php
-namespace App\Controller;
-
 /**
  * Controller classes extend this abstract class.
  *
@@ -9,9 +7,13 @@ namespace App\Controller;
  * @license https://opensource.org/licenses/MIT MIT
  */
 
-use \ORM;
-use \PDOException;
-use \Psr\Container\ContainerInterface as ContainerInterface;
+declare(strict_types=1);
+
+namespace App\Controller;
+
+use ORM;
+use PDOException;
+use Psr\Container\ContainerInterface;
 
 abstract class Controller
 {
@@ -23,14 +25,16 @@ abstract class Controller
     /**
      * @param ContainerInterface $container
      */
-    public function __construct(ContainerInterface $container) {
+    public function __construct(ContainerInterface $container)
+    {
         $this->ci = $container;
     }
 
     /**
      * @param $name
      */
-    public function __get($name) {
+    public function __get($name)
+    {
         if ($this->ci->has($name)) {
             return $this->ci->get($name);
         }
@@ -40,7 +44,8 @@ abstract class Controller
      * Set a custom <title>
      * @param string $title
      */
-    protected function setTitle($title) {
+    protected function setTitle($title)
+    {
         $this->theme->setData('title', $title . ' - indiebookclub');
     }
 
@@ -48,7 +53,8 @@ abstract class Controller
      * Get current user
      * @return ORM|bool
      */
-    public function get_user() {
+    public function get_user()
+    {
         try {
             return ORM::for_table('users')
                 ->where('id', $_SESSION['user_id'])
@@ -67,7 +73,8 @@ abstract class Controller
      * @param int $slug
      * @return ORM|bool
      */
-    public function get_user_by_id($id) {
+    public function get_user_by_id($id)
+    {
         try {
             return ORM::for_table('users')
                 ->where('id', $id)
@@ -86,7 +93,8 @@ abstract class Controller
      * @param string $slug
      * @return ORM|bool
      */
-    public function get_user_by_slug($slug) {
+    public function get_user_by_slug($slug)
+    {
         try {
             return ORM::for_table('users')
                 ->where('profile_slug', $slug)

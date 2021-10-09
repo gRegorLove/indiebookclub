@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 return [
     'settings' => [
     	'version' => '0.0.3',
