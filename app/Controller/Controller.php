@@ -90,22 +90,25 @@ abstract class Controller
 
     /**
      * Get user by profile slug
-     * @param string $slug
-     * @return ORM|bool
      */
-    public function get_user_by_slug($slug)
+    public function get_user_by_slug(string $slug): ?ORM
     {
         try {
-            return ORM::for_table('users')
+            $record =  ORM::for_table('users')
                 ->where('profile_slug', $slug)
                 ->find_one();
+
+            if ($record) {
+                return $record;
+            }
         } catch (PDOException $e) {
             $this->logger->error(
                 'Error getting user. ' . $e->getMessage(),
                 compact('slug')
             );
-            return false;
         }
+
+        return null;
     }
 }
 

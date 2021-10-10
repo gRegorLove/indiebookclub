@@ -21,6 +21,7 @@ use BarnabyWalters\Mf2 as Mf2helper;
 use DateTime;
 use DateInterval;
 use Mf2;
+use ORM;
 
 class Utils
 {
@@ -44,7 +45,7 @@ class Utils
      * @copyright 2014 Aaron Parecki
      * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
      */
-    public function session($key)
+    public function session(string $key)
     {
         if (array_key_exists($key, $_SESSION)) {
             return $_SESSION[$key];
@@ -315,10 +316,18 @@ class Utils
         return $options;
     }
 
+    public function setAccessToken(array $indieauth_response)
+    {
+        $access_token = $indieauth_response['response']['access_token'] ?? null;
+        if ($access_token) {
+            $_SESSION['auth']['access_token'] = $access_token;
+        }
+    }
+
     /**
      * Get access_token from $_SESSION
      */
-    public function get_access_token()
+    public function getAccessToken()
     {
         if (isset($_SESSION['auth']['access_token'])) {
             return $_SESSION['auth']['access_token'];
@@ -327,22 +336,44 @@ class Utils
         return '';
     }
 
-    /**
-     * @author Aaron Parecki, https://aaronparecki.com
-     * @copyright 2014 Aaron Parecki
-     * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
-     */
-    public function add_hcard_info($user, $hcard)
+    public function setUserData(?ORM $user = null, array $h_card = []): ?ORM
     {
-        if ($user && $hcard) {
-            if (Mf2helper\hasProp($hcard, 'name')) {
-                $user->name = Mf2helper\getPlaintext($hcard, 'name');
+        $authorization_endpoint = $this->session('authorization_endpoint');
+        $token_endpoint = $this->session('token_endpoint');
+        $micropub_endpoint = $this->session('micropub_endpoint');
+
+        if (!$user) {
+            $user = ORM::for_table('users')->create();
+        }
+
+        $user->type = $micropub_endpoint ? 'micropub' : 'local';
+
+        if ($authorization_endpoint) {
+            $user->authorization_endpoint = $authorization_endpoint;
+        }
+
+        if ($token_endpoint) {
+            $user->token_endpoint = $token_endpoint;
+        }
+
+        if ($micropub_endpoint) {
+            $user->micropub_endpoint = $micropub_endpoint;
+        }
+
+        if ($h_card) {
+            if (Mf2helper\hasProp($h_card, 'name')) {
+                $user->name = Mf2helper\getPlaintext($h_card, 'name');
             }
 
-            if (Mf2helper\hasProp($hcard, 'photo')) {
-                $user->photo_url = Mf2helper\getPlaintext($hcard, 'photo');
+            if (Mf2helper\hasProp($h_card, 'photo')) {
+                $user->photo_url = Mf2helper\getPlaintext($h_card, 'photo');
             }
         }
+
+        $user->set_expr('date_created', 'NOW()');
+        $user->set_expr('last_login', 'NOW()');
+
+        return $user;
     }
 
     /**
@@ -384,13 +415,11 @@ class Utils
         $httpheaders = ['Authorization: Bearer ' . $access_token];
 
         if (!$json) {
-            $params = array_merge(
-                [
-                    'h' => 'entry',
-                    'access_token' => $access_token
-                ],
-                $params
-            );
+            $params['access_token'] = $access_token;
+
+            if (!array_key_exists('action', $params)) {
+                $params['h'] = 'entry';
+            }
         }
 
         if ($json) {
@@ -446,7 +475,7 @@ class Utils
         $data = [];
 
         if ($response) {
-            $data = @json_decode($response, true);
+            $data = @json_decode($response, true) ?? [];
         }
 
         $error = curl_error($ch);
@@ -472,7 +501,7 @@ class Utils
         $r = micropub_get(
             $user->micropub_endpoint,
             ['q' => 'config'],
-            $this->get_access_token()
+            $this->getAccessToken()
         );
 
         if ($r['data'] && is_array($r['data']) && array_key_exists('media-endpoint', $r['data'])) {

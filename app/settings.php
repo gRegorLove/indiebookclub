@@ -7,7 +7,9 @@ return [
     	'version' => '0.0.3',
     	'offline' => false,
     	'developer_ip' => '127.0.0.1',
-    	'developer_domain' => 'gregorlove.com',
+    	'developer_domains' => [
+            'gregorlove.com',
+        ],
         'displayErrorDetails' => (getenv('APP_ENV') !== 'production'),
         'determineRouteBeforeAppMiddleware' => true,
         'theme' => [

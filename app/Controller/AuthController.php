@@ -16,12 +16,18 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use IndieAuth\Client;
 use ORM;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 class AuthController extends Controller
 {
+    public function debug(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    {
+        exit;
+    }
+
     /**
      * Route that starts the authentication process
      */
@@ -29,8 +35,9 @@ class AuthController extends Controller
     {
         $params = $request->getQueryParams();
 
-        // Attempt to normalize the 'me' parameter or display an error.
-        if (!array_key_exists('me', $params) || !($me = \IndieAuth\Client::normalizeMeURL($params['me']))) {
+        // Attempt to normalize the 'me' parameter or display an error
+        $me = Client::normalizeMeURL($params['me'] ?? '');
+        if (false === $me) {
             return $this->theme->render(
                 $response,
                 'auth/error',
@@ -66,7 +73,7 @@ class AuthController extends Controller
         }
 
         // Restrict the domains that can log in to development environment.
-        if (getenv('APP_ENV') !== 'production' && $this->utils->hostname($me) !== $this->settings['developer_domain']) {
+        if (getenv('APP_ENV') !== 'production' && !in_array($this->utils->hostname($me), $this->settings['developer_domains'])) {
             return $this->theme->render(
                 $response,
                 'auth/error',
@@ -77,65 +84,52 @@ class AuthController extends Controller
             );
         }
 
-        // Discover endpoints and determine if this is a micropub user.
-        $authorization_endpoint = \IndieAuth\Client::discoverAuthorizationEndpoint($me);
-        $token_endpoint = \IndieAuth\Client::discoverTokenEndpoint($me);
-        $micropub_endpoint = \IndieAuth\Client::discoverMicropubEndpoint($me);
-        $is_micropub_user = ($token_endpoint && $micropub_endpoint && $authorization_endpoint) ? true : false;
+        // The client ID should be the home page of your app.
+        Client::$clientID = sprintf('https://%s/', getenv('IBC_HOSTNAME'));
 
-        $_SESSION['attempted_me'] = $me;
-        $_SESSION['auth_state'] = \IndieAuth\Client::generateStateParameter();
-        $_SESSION['redirect_after_login'] = '/new';
+        // The redirect URL is where the user will be returned to after they approve the request.
+        Client::$redirectURL = $this->utils->getRedirectURL();
+
+        $authorization_endpoint = Client::discoverAuthorizationEndpoint($me);
+        $token_endpoint = Client::discoverTokenEndpoint($me);
+        $micropub_endpoint = Client::discoverMicropubEndpoint($me);
+        $is_micropub_user = ($token_endpoint && $micropub_endpoint && $authorization_endpoint) ? true : false;
+        #$authorization_endpoint = false;
+        #var_dump($authorization_endpoint); exit;
+        #$is_micropub_user = false;
 
         if ($is_micropub_user) {
-            $authorization_url = \IndieAuth\Client::buildAuthorizationURL(
-                $authorization_endpoint,
-                $me,
-                $this->utils->getRedirectURL(),
-                $this->utils->getClientID(),
-                $_SESSION['auth_state'],
-                'create'
-            );
-            $_SESSION['authorization_endpoint'] = $authorization_endpoint;
-            $_SESSION['micropub_endpoint'] = $micropub_endpoint;
-            $_SESSION['token_endpoint'] = $token_endpoint;
+            list($authorization_url, $error) = Client::begin($me, 'create');
         } else {
-            $authorization_url = \IndieAuth\Client::buildAuthorizationURL(
-                'https://indieauth.com/auth',
-                $me,
-                $this->utils->getRedirectURL(),
-                $this->utils->getClientID(),
-                $_SESSION['auth_state']
+            if (!$authorization_endpoint) {
+                $authorization_endpoint = 'https://indielogin.com/auth';
+            }
+
+            list($authorization_url, $error) = Client::begin($me, false, $authorization_endpoint);
+        }
+
+        if ($error) {
+            return $this->theme->render(
+                $response,
+                'auth/error',
+                [
+                    'error' => $error['error'],
+                    'errorDescription' => $error['error_description'],
+                ]
             );
         }
 
-        $h_card = \IndieAuth\Client::representativeHCard($me);
+        // Store endpoints in session. Used after authorization to add/update the user.
+        $_SESSION['authorization_endpoint'] = $authorization_endpoint;
+        $_SESSION['micropub_endpoint'] = $micropub_endpoint;
+        $_SESSION['token_endpoint'] = $token_endpoint;
+
         $user = $this->get_user_by_slug($this->utils->hostname($me));
 
+        // User has logged in before and isn't restarting; can redirect directly to $authorization_url
         if ($user && $user->last_login && !array_key_exists('restart', $params)) {
-            $this->utils->add_hcard_info($user, $h_card);
-            $user->micropub_endpoint = $micropub_endpoint;
-            $user->authorization_endpoint = $authorization_endpoint;
-            $user->token_endpoint = $token_endpoint;
-            $user->type = $micropub_endpoint ? 'micropub' : 'local';
-            $user->save();
-
             return $response->withRedirect($authorization_url, 301);
         }
-
-        if (!$user) {
-            $user = ORM::for_table('users')->create();
-        }
-
-        $this->utils->add_hcard_info($user, $h_card);
-        $user->url = $me;
-        $user->profile_slug = $this->utils->hostname($me);
-        $user->date_created = date('Y-m-d H:i:s');
-        $user->micropub_endpoint = $micropub_endpoint;
-        $user->authorization_endpoint = $authorization_endpoint;
-        $user->token_endpoint = $token_endpoint;
-        $user->type = $micropub_endpoint ? 'micropub' : 'local';
-        $user->save();
 
         return $this->theme->render(
             $response,
@@ -156,208 +150,105 @@ class AuthController extends Controller
      */
     public function callback(ServerRequestInterface $request, ResponseInterface $response, array $args)
     {
+        // The client ID should be the home page of your app.
+        Client::$clientID = sprintf('https://%s/', getenv('IBC_HOSTNAME'));
+
+        // The redirect URL is where the user will be returned to after they approve the request.
+        Client::$redirectURL = $this->utils->getRedirectURL();
+
         $params = $request->getQueryParams();
+        list($indieauth_response, $error) = Client::complete($params);
 
-        // Missing auth state in session; start the login again.
-        if (!array_key_exists('auth_state', $_SESSION)) {
+        if ($error) {
             return $this->theme->render(
                 $response,
                 'auth/error',
                 [
-                    'error' => 'Missing session state',
-                    'errorDescription' => 'Something went wrong, please try signing in again, and make sure cookies are enabled for this domain.'
+                    'error' => $error['error'],
+                    'errorDescription' => $error['error_description'],
                 ]
             );
         }
 
-        if (!array_key_exists('code', $params) || trim($params['code']) == '') {
-            return $this->theme->render(
-                $response,
-                'auth/error',
-                [
-                    'error' => 'Missing authorization code',
-                    'errorDescription' => 'No authorization code was provided in the request.'
-                ]
-            );
-        }
-
-        // Verify the state came back and matches what we set in the session
-        // Should only fail for malicious attempts, ok to show a not as nice error message
-        if (!array_key_exists('state', $params)) {
-            return $this->theme->render(
-                $response,
-                'auth/error',
-                [
-                    'error' => 'Missing state parameter',
-                    'errorDescription' => 'No state parameter was provided in the request. This shouldn’t happen. It is possible this is a malicious authorization attempt, or your authorization server failed to pass back the “state” parameter.'
-                ]
-            );
-        }
-
-        if ($params['state'] != $_SESSION['auth_state']) {
-            return $this->theme->render(
-                $response,
-                'auth/error',
-                [
-                    'error' => 'Invalid state',
-                    'errorDescription' => 'The state parameter provided did not match the state provided at the start of authorization. This is most likely caused by a malicious authorization attempt.'
-                ]
-            );
-        }
-
-        unset($_SESSION['auth_state']);
-
-        if (!isset($_SESSION['attempted_me'])) {
-            return $this->theme->render(
-                $response,
-                'auth/error',
-                [
-                    'error' => 'Missing data',
-                    'errorDescription' => 'We forgot who was logging in. It’s possible you took too long to finish signing in, or something got mixed up by signing in on another tab.'
-                ]
-            );
-        }
-
-        $me = $_SESSION['attempted_me'];
-
-        // Now the basic sanity checks have passed. Time to start providing more helpful messages when there is an error.
-        // An authorization code is in the query string, and we want to exchange that for an access token at the token endpoint.
-
-        $authorization_endpoint = isset($_SESSION['authorization_endpoint']) ? $_SESSION['authorization_endpoint'] : false;
-        $token_endpoint = isset($_SESSION['token_endpoint']) ? $_SESSION['token_endpoint'] : false;
-        $micropub_endpoint = isset($_SESSION['micropub_endpoint']) ? $_SESSION['micropub_endpoint'] : false;
-
-        unset($_SESSION['authorization_endpoint']);
-        unset($_SESSION['token_endpoint']);
-        unset($_SESSION['micropub_endpoint']);
-
-        $skipDebugScreen = false;
-
-        if ($token_endpoint) {
-            // Exchange auth code for an access token
-            $token = \IndieAuth\Client::getAccessToken(
-                $token_endpoint,
-                $params['code'],
-                $me,
-                $this->utils->getRedirectURL(),
-                $this->utils->getClientID(),
-                true
-            );
-
-            // Valid access token was returned. Verify `me` matches expected domain.
-            if ($this->utils->hasProperty($token['auth'], ['me', 'access_token', 'scope'])) {
-                if (parse_url($token['auth']['me'], PHP_URL_HOST) != parse_url($me, PHP_URL_HOST)) {
-                    return $this->theme->render(
-                        $response,
-                        'auth/error',
-                        [
-                            'error' => 'Invalid user',
-                            'errorDescription' => 'The user URL that was returned in the access token did not match the domain of the user signing in.'
-                        ]
-                    );
-                }
-
-                // Verify that the returned `me` does not have paths.
-                if (!in_array(parse_url($token['auth']['me'], PHP_URL_PATH), ['/', '//'])) {
-                    return $this->theme->render(
-                        $response,
-                        'auth/error',
-                        [
-                            'error' => 'Invalid profile URL',
-                            'errorDescription' => 'The authorization endpoint returned a profile URL with a path. URL paths are not currently supported.'
-                        ]
-                    );
-                }
-
-                // User is now signed in.
-                $_SESSION['auth'] = $token['auth'];
-                $_SESSION['me'] = $token['auth']['me'];
-            }
-
-        } else {
-            // No token endpoint was discovered, instead, verify the auth code at the auth server or with indieauth.com
-            // Never show the intermediate login confirmation page if we just authenticated them instead of got authorization
-            $skipDebugScreen = true;
-
-            if (!$authorization_endpoint) {
-                $authorization_endpoint = 'https://indieauth.com/auth';
-            }
-
-            $token['auth'] = \IndieAuth\Client::verifyIndieAuthCode(
-                $authorization_endpoint,
-                $params['code'],
-                $me,
-                $this->utils->getRedirectURL(),
-                $this->utils->getClientID()
-            );
-
-            if ($this->utils->hasProperty($token['auth'], 'me')) {
-                $token['response'] = '';
-                $token['auth']['scope'] = '';
-                $token['auth']['access_token'] = '';
-                $_SESSION['auth'] = $token['auth'];
-                $_SESSION['me'] = $token['auth']['me'];
-            }
-        }
-
-        // Verify the login actually succeeded.
-        if (!$this->utils->hasProperty($token['auth'], 'me')) {
-            return $this->theme->render(
-                $response,
-                'auth/error',
-                [
-                    'error' => 'Unable to verify the sign-in attempt',
-                    'errorDescription' => ''
-                ]
-            );
-        }
-
+        $me = $indieauth_response['me'];
         $user = $this->get_user_by_slug($this->utils->hostname($me));
 
+        $h_card = Client::representativeHCard($me);
+        if (!$h_card) {
+            $h_card = [];
+        }
+        $user = $this->utils->setUserData($user, $h_card);
+
+        if ($user->id) {
+            $user = $this->updateUser($user, $indieauth_response);
+        } else {
+            $user = $this->createUser($user, $indieauth_response);
+        }
+
         if (!$user) {
-            $user = ORM::for_table('users')->create();
-            $user->url = $me;
-            $user->profile_slug = $this->utils->hostname($me);
-            $user->date_created = date('Y-m-d H:i:s');
+            $response = $response->withStatus(500);
+            return $this->theme->render($response, '500');
         }
 
-        if ($user->last_login) {
-            $skipDebugScreen = true;
+        $this->utils->setAccessToken($indieauth_response);
+
+        if ($micropub_endpoint = $this->utils->session('micropub_endpoint')) {
+            $user = $this->updateMicropubConfig($user, $micropub_endpoint);
         }
 
-        if ($micropub_endpoint) {
-            $config_response = $this->utils->micropub_get(
-                $micropub_endpoint,
-                ['q' => 'config'],
-                $this->utils->get_access_token()
+        if (!$user) {
+            $response = $response->withStatus(500);
+            return $this->theme->render($response, '500');
+        }
+
+        $_SESSION['me'] = $me;
+        $_SESSION['user_id'] = $user->id();
+        unset($_SESSION['authorization_endpoint']);
+        unset($_SESSION['token_endpoint']);
+
+        return $response->withRedirect('/new', 302);
+    }
+
+    /**
+     * Route that handles re-authorizing
+     */
+    public function re_authorize(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    {
+        $user = $this->get_user();
+
+        if ($request->isPost()) {
+            $data = $request->getParsedBody();
+            $scopes = implode(' ', $data['scopes']);
+
+            $_SESSION['attempted_me'] = $user->url;
+            $_SESSION['auth_state'] = Client::generateStateParameter();
+            $_SESSION['authorization_endpoint'] = $user->authorization_endpoint;
+            $_SESSION['micropub_endpoint'] = $user->micropub_endpoint;
+            $_SESSION['token_endpoint'] = $user->token_endpoint;
+
+            $authorization_url = Client::buildAuthorizationURL(
+                $user->authorization_endpoint,
+                $user->url,
+                $this->utils->getRedirectURL(),
+                $this->utils->getClientID(),
+                $_SESSION['auth_state'],
+                $scopes
             );
 
-            if (array_key_exists('visibility', $config_response['data'])) {
-                $user->supported_visibility = json_encode($config_response['data']['visibility']);
-            }
+            return $response->withRedirect($authorization_url, 302);
         }
 
-        $user->micropub_endpoint = $micropub_endpoint;
-        $user->token_scope = $token['auth']['scope'];
-        $user->set_expr('last_login', 'NOW()');
-        $user->save();
-        $_SESSION['user_id'] = $user->id();
-
-        if ($skipDebugScreen) {
-            return $response->withRedirect($_SESSION['redirect_after_login'], 301);
-        }
+        $headline = 'Additional Permission Needed';
+        $message = '<p> indiebookclub needs permission to delete posts from your site. </p> <p> Click the button below to re-authorize the app. </p>';
 
         return $this->theme->render(
             $response,
-            'auth/callback',
-            [
-                'me' => $me,
-                'tokenEndpoint' => $token_endpoint,
-                'auth' => $token['auth'],
-                'response' => $token['response'],
-                'curl_error' => (array_key_exists('error', $token) ? $token['error'] : false),
-                'redirect' => $_SESSION['redirect_after_login']
-            ]
+            'auth/re_authorize',
+            compact(
+                'me',
+                'headline',
+                'message'
+            )
         );
     }
 
@@ -369,7 +260,7 @@ class AuthController extends Controller
         $user = $this->get_user();
 
         $this->utils->revoke_micropub_token(
-            $this->utils->get_access_token(),
+            $this->utils->getAccessToken(),
             $user->token_endpoint
         );
 
@@ -398,7 +289,7 @@ class AuthController extends Controller
         $user = $this->get_user();
 
         $this->utils->revoke_micropub_token(
-            $this->utils->get_access_token(),
+            $this->utils->getAccessToken(),
             $user->token_endpoint
         );
 
@@ -408,6 +299,52 @@ class AuthController extends Controller
         unset($_SESSION['user_id']);
         unset($_SESSION['access_token']);
         return $response->withRedirect('/', 302);
+    }
+
+    private function createUser(ORM $user, array $indieauth_response): ?ORM
+    {
+        $user->url = $indieauth_response['me'];
+        $user->profile_slug = $this->utils->hostname($indieauth_response['me']);
+        $user->token_scope = $indieauth_response['response']['scope'] ?? '';
+        $user->set_expr('date_created', 'NOW()');
+        $user->set_expr('last_login', 'NOW()');
+
+        if ($user->save()) {
+            return $user;
+        }
+
+        return null;
+    }
+
+    private function updateUser(ORM $user, array $indieauth_response): ?ORM
+    {
+        $user->token_scope = $indieauth_response['response']['scope'] ?? '';
+        $user->set_expr('last_login', 'NOW()');
+
+        if ($user->save()) {
+            return $user;
+        }
+
+        return null;
+    }
+
+    private function updateMicropubConfig(ORM $user, string $micropub_endpoint): ?ORM
+    {
+        $config_response = $this->utils->micropub_get(
+            $micropub_endpoint,
+            ['q' => 'config'],
+            $this->utils->getAccessToken()
+        );
+
+        if (array_key_exists('visibility', $config_response['data'])) {
+            $user->supported_visibility = json_encode($config_response['data']['visibility']);
+        }
+
+        if ($user->save()) {
+            return $user;
+        }
+
+        return null;
     }
 }
 
