@@ -13,12 +13,15 @@
  * @see https://github.com/aaronpk/Teacup
  */
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use DateTime;
-use Mwhite\PhpIsbn\Isbn;
+use Exception;
 use ORM;
 use PDOException;
+use Mwhite\PhpIsbn\Isbn;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -56,7 +59,7 @@ class IbcController extends Controller
                     return $this->theme->render($response, '500');
                 }
 
-                $this->cache_entry($entry->id);
+                $this->cache_entry((int) $entry->id);
 
                 $url = $this->router->pathFor(
                     'entry',
@@ -73,7 +76,7 @@ class IbcController extends Controller
                     $mp_response = $this->utils->micropub_post(
                         $user->micropub_endpoint,
                         $mp_request,
-                        $this->utils->get_access_token(),
+                        $this->utils->getAccessToken(),
                         true
                     );
 
@@ -90,7 +93,9 @@ class IbcController extends Controller
 
         $options_visibility = $this->utils->get_visibility_options($user);
 
-        $read_status = strtolower($request->getQueryParam('read-status', null));
+        if ($read_status = $request->getQueryParam('read-status', null)) {
+            $read_status = strtolower($read_status);
+        }
 
         if (!in_array($read_status, ['to-read', 'reading', 'finished'])) {
             $read_status = 'to-read';
@@ -129,6 +134,89 @@ class IbcController extends Controller
                 'tz_offset' => '+0000',
                 'errors' => $errors,
             ]
+        );
+    }
+
+    /**
+     * Future functionality
+     * @see https://github.com/gRegorLove/indiebookclub/issues/13
+     */
+    // public function retry(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    // {}
+
+    public function delete(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    {
+        $profile = $this->get_user();
+        $errors = [];
+
+        if ($request->isPost()) {
+            $data = $request->getParsedBody();
+
+            $allowlist = array_fill_keys([
+                'confirm_delete',
+                'mp_delete',
+                'id',
+            ], 0);
+
+            if (!$this->validate_post_request($data, $allowlist)) {
+                $response = $response->withStatus(400);
+                return $this->theme->render($response, '400');
+            }
+
+            $errors = $this->validate_delete_post($data);
+
+            if (count($errors) === 0) {
+                # double check: can only delete own posts
+                $entry = ORM::for_table('entries')
+                    ->where('user_id', $this->utils->session('user_id'))
+                    ->where('id', $data['id'])
+                    ->find_one();
+
+                if (!$entry) {
+                    return $response->withStatus(403);
+                }
+
+                // Send delete to the micropub endpoint
+                if ($profile->micropub_endpoint && $data['mp_delete'] == 'yes' && $entry->canonical_url) {
+                    $mp_request = [
+                        'action' => 'delete',
+                        'url' => $entry->canonical_url,
+                    ];
+
+                    $mp_response = $this->utils->micropub_post(
+                        $profile->micropub_endpoint,
+                        $mp_request,
+                        $this->utils->getAccessToken()
+                    );
+
+                    $this->add_last_micropub_response($mp_response, $profile);
+                }
+
+                $this->uncache_entry((int) $data['id']);
+                $entry->delete();
+
+                $url = $this->router->pathFor('profile', ['domain' => $profile->profile_slug]);
+                return $response->withRedirect($url, 302);
+            }
+
+        } elseif ($request->isGet()) {
+            $entry = ORM::for_table('entries')
+                ->where('user_id', $this->utils->session('user_id'))
+                ->where('id', $args['id'])
+                ->find_one();
+
+            if (!$entry) {
+                return $response->withStatus(404);
+            }
+        }
+
+        $is_micropub_post = ($entry->micropub_success && $entry->canonical_url);
+        $has_micropub_delete = $this->utils->hasMicropubDelete($profile->token_scope);
+
+        return $this->theme->render(
+            $response,
+            'delete',
+            compact('errors', 'entry', 'profile', 'is_micropub_post', 'has_micropub_delete')
         );
     }
 
@@ -217,18 +305,21 @@ class IbcController extends Controller
      * @param array $data
      * @return bool
      */
-    protected function validate_post_request($data) {
-        $allowlist = array_fill_keys([
-            'read_status',
-            'title',
-            'authors',
-            'switch-uid',
-            'doi',
-            'isbn',
-            'tags',
-            'visibility',
-            'tzoffset',
-        ], 0);
+    protected function validate_post_request($data, $allowlist = [])
+    {
+        if (!$allowlist) {
+            $allowlist = array_fill_keys([
+                'read_status',
+                'title',
+                'authors',
+                'switch-uid',
+                'doi',
+                'isbn',
+                'tags',
+                'visibility',
+                'tzoffset',
+            ], 0);
+        }
 
         if (count(array_diff_key($data, $allowlist)) > 0) {
             return false;
@@ -256,6 +347,20 @@ class IbcController extends Controller
 
         if ($data['isbn'] && Isbn::to13($data['isbn'], true) === false) {
             $errors[] = 'The <i>ISBN</i> entered appears to be invalid';
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Validate delete post fields
+     */
+    protected function validate_delete_post(array $data): array
+    {
+        $errors = [];
+
+        if ($data['confirm_delete'] == 'no') {
+            $errors[] = 'Please check the box to confirm deletion';
         }
 
         return $errors;
@@ -314,7 +419,7 @@ class IbcController extends Controller
             $entry->read_status = $data['read_status'];
             $entry->title = $data['title'];
             $entry->authors = $data['authors'];
-            $entry->category = $this->utils->normalize_category($data['tags']);
+            $entry->category = $this->utils->normalizeSeparatedString($data['tags']);
             $entry->visibility = $data['visibility'];
             $entry->save();
             return $entry;
@@ -332,7 +437,54 @@ class IbcController extends Controller
      * @param int $id
      * @return bool
      */
-    protected function cache_entry($id)
+    protected function cache_entry(int $id): bool
+    {
+        $entry = ORM::for_table('entries')
+            ->where('id', $id)
+            ->find_one();
+
+        try {
+            if (!$entry) {
+                throw new Exception('Could not load entry');
+            }
+
+            $profile = $this->get_user_by_id($entry->user_id);
+            if (!$profile) {
+                throw new Exception('Could not load user');
+            }
+
+            $is_caching = true;
+            $src = $this->theme->renderView(
+                'partials/entry',
+                compact('entry', 'profile', 'is_caching')
+            );
+
+            $file_path = sprintf('%s/cache/%s-%d.html',
+                APP_DIR,
+                $profile->profile_slug,
+                $id
+            );
+
+            if (file_put_contents($file_path, trim($src)) === false) {
+                throw new Exception('Could not write file');
+            }
+
+            return true;
+        } catch (Exception $e) {
+            $this->logger->error(
+                'Error caching entry: ' . $e->getMessage(),
+                compact('id')
+            );
+            return false;
+        }
+    }
+
+    /**
+     * Un-cache read post
+     * @param int $id
+     * @return bool
+     */
+    protected function uncache_entry(int $id): bool
     {
         $entry = ORM::for_table('entries')
             ->where('id', $id)
@@ -349,28 +501,20 @@ class IbcController extends Controller
                 throw new Exception('Could not load user');
             }
 
-            $src = $this->theme->renderView(
-                'partials/entry',
-                [
-                    'entry' => $entry,
-                    'user' => $user
-                ]
-            );
-
             $file_path = sprintf('%s/cache/%s-%d.html',
                 APP_DIR,
                 $user->profile_slug,
                 $id
             );
 
-            if (file_put_contents($file_path, trim($src)) === false) {
-                throw new Exception('Could not write file');
+            if (file_exists($file_path)) {
+                unlink($file_path);
             }
 
             return true;
         } catch (Exception $e) {
             $this->logger->error(
-                'Error caching entry: ' . $e->getMessage(),
+                'Error un-caching entry: ' . $e->getMessage(),
                 compact('id')
             );
             return false;
@@ -406,6 +550,21 @@ class IbcController extends Controller
         } catch (PDOException $e) {
             $this->logger->error(
                 'Error adding micropub response. ' . $e->getMessage(),
+                $mp_response
+            );
+            return false;
+        }
+    }
+
+    protected function add_last_micropub_response(array $mp_response, $user): bool
+    {
+        try {
+            $user->last_micropub_response = $mp_response['response'];
+            $user->save();
+            return true;
+        } catch (PDOException $e) {
+            $this->logger->error(
+                'Error adding last micropub response. ' . $e->getMessage(),
                 $mp_response
             );
             return false;

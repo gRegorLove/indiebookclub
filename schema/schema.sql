@@ -9,6 +9,7 @@ CREATE TABLE `users` (
   `token_endpoint` varchar(255) NOT NULL DEFAULT '',
   `micropub_endpoint` varchar(255) NOT NULL DEFAULT '',
   `micropub_media_endpoint` varchar(255) NOT NULL DEFAULT '',
+  `supported_visibility` text NOT NULL,
   `token_scope` varchar(255) NOT NULL DEFAULT '',
   `micropub_success` tinyint(4) DEFAULT '0',
   `last_micropub_response` text,

@@ -23,9 +23,11 @@ $app->add(function ($request, $response, $next) use ($container) {
 
     $authenticated_route_names = [
         'new',
+        'delete',
         'settings',
         'settings_update',
         'auth_reset',
+        'auth_re_authorize',
     ];
 
     if (in_array($route_name, $authenticated_route_names) && !array_key_exists('user_id', $_SESSION)) {

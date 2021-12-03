@@ -1,0 +1,24 @@
+<?php
+$headline = $headline ?? 'Please Re-authorize';
+$message = $message ?? '<p> Lorem ipsum </p>';
+
+$this->import('partials/header'); ?>
+
+<div class="content">
+
+    <h1> <?=$headline;?> </h1>
+    <?=$message;?>
+
+    <b>Permissions that indiebookclub will request:</b>
+
+    <form method="post" action="<?=$utils->router->pathFor('auth_re_authorize')?>">
+        <input type="hidden" name="scopes[]" value="create">
+        <div class="mb-1">
+            ✔ create<br>
+            <label><input type="checkbox" name="scopes[]" value="delete" checked> delete</label>
+        </div>
+        <input type="submit" value="Authorize">
+    </form>
+
+</div>
+

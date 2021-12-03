@@ -7,7 +7,8 @@
     "indieauth/client": ">=0.2.0",
     "coreorm/slim3-view": "^1.1",
     "vlucas/phpdotenv": "^2.5",
-    "monolog/monolog": "^1.23"
+    "monolog/monolog": "^1.23",
+    "phpunit/phpunit": "^8.4"
   },
   "autoload": {
     "psr-4": {

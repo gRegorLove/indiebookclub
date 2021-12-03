@@ -1,25 +1,23 @@
-	<footer>
-		<div class="container">
-			<nav>
-				<ul>
+    <footer>
+        <div class="container">
+            <nav>
+                <ul>
 <?php if ($utils->session('me')): ?>
-					<li><a href="<?=$utils->router->pathFor('new');?>">New Post</a></li>
+                    <li><a href="<?=$utils->router->pathFor('new');?>">New Post</a></li>
 <?php endif; ?>
-					<li><a href="<?=$utils->router->pathFor('about');?>">About</a></li>
-					<li><a href="<?=$utils->router->pathFor('documentation');?>">Documentation</a></li>
+                    <li><a href="<?=$utils->router->pathFor('about');?>">About</a></li>
+                    <li><a href="<?=$utils->router->pathFor('documentation');?>">Documentation</a></li>
+                    <li><a href="<?=$utils->router->pathFor('updates');?>">Updates</a></li>
 <?php if ($utils->session('me')): ?>
-					<li><a href="<?=$utils->router->pathFor('profile', ['domain' => $utils->hostname($utils->session('me'))]);?>">My Profile</a></li>
-					<li><a href="<?=$utils->router->pathFor('settings');?>">Settings</a></li>
-					<li><a href="<?=$utils->router->pathFor('signout');?>">Sign Out</a></li>
+                    <li><a href="<?=$utils->router->pathFor('profile', ['domain' => $utils->hostname($utils->session('me'))]);?>">My Profile</a></li>
+                    <li><a href="<?=$utils->router->pathFor('settings');?>">Settings</a></li>
+                    <li><a href="<?=$utils->router->pathFor('signout');?>">Sign Out</a></li>
 <?php else: ?>
-					<form action="<?=$utils->router->pathFor('auth_start');?>" method="get" class="navbar-form">
-						<input type="text" name="me" placeholder="https://example.com" />
-						<input type="submit" value="Sign In">
-					</form>
+                    <li><a href="/">Sign In</a></li>
 <?php endif; ?>
-				</ul>
-			</nav>
-			<p class="credits"> This code is <a href="https://github.com/gRegorLove/indiebookclub">open source</a>. Feel free to send a pull request or <a href="https://github.com/gRegorLove/indiebookclub/issues">file an issue</a>. </p>
-		</div>
-	</footer>
+                </ul>
+            </nav>
+            <p> This code is <a href="https://github.com/gRegorLove/indiebookclub">open source</a>. Feel free to send a pull request or <a href="https://github.com/gRegorLove/indiebookclub/issues">file an issue</a>. </p>
+        </div>
+    </footer>
 

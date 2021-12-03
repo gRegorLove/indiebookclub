@@ -7,6 +7,8 @@
  * @license https://opensource.org/licenses/MIT MIT
  */
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use DateTime;

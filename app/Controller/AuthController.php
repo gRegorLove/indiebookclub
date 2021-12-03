@@ -16,8 +16,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use IndieAuth\Client;
 use ORM;
+use IndieAuth\Client;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -38,54 +38,26 @@ class AuthController extends Controller
         // Attempt to normalize the 'me' parameter or display an error
         $me = Client::normalizeMeURL($params['me'] ?? '');
         if (false === $me) {
-            return $this->theme->render(
-                $response,
-                'auth/error',
-                [
-                    'error' => 'Invalid “me” parameter',
-                    'errorDescription' => 'The URL you entered is not valid.'
-                ]
-            );
+            return $this->errorResponse($response, 'Invalid “me” parameter', 'The URL you entered is not valid.');
         }
 
         // Prevent logging in with this domain.
-        if (strtolower($this->utils->hostname($me)) == getenv('IBC_HOSTNAME')) {
-            return $this->theme->render(
-                $response,
-                'auth/error',
-                [
-                    'error' => '<i>Inception</i> error',
-                    'errorDescription' => 'No, we cannot go deeper. :] Please log in with <i>your</i> domain name.'
-                ]
-            );
+        if (strtolower($this->utils->hostname($me)) == $_ENV['IBC_HOSTNAME']) {
+            return $this->errorResponse($response, '<i>Inception</i> error', 'No, we cannot go deeper. :] Please log in with <i>your</i> domain name.');
         }
 
         // Prevent logging in with URL paths
         if (!in_array(parse_url($me, PHP_URL_PATH), ['/', '//'])) {
-            return $this->theme->render(
-                $response,
-                'auth/error',
-                [
-                    'error' => 'Invalid “me” parameter',
-                    'errorDescription' => 'URL paths are not currently supported. Please log in with only a domain name.'
-                ]
-            );
+            return $this->errorResponse($response, 'Invalid “me” parameter', 'URL paths are not currently supported. Please log in with only a domain name.');
         }
 
         // Restrict the domains that can log in to development environment.
         if (getenv('APP_ENV') !== 'production' && !in_array($this->utils->hostname($me), $this->settings['developer_domains'])) {
-            return $this->theme->render(
-                $response,
-                'auth/error',
-                [
-                    'error' => 'Invalid “me” parameter',
-                    'errorDescription' => 'This development instance does not permit logging in with that domain.'
-                ]
-            );
+            return $this->errorResponse($response, 'Invalid “me” parameter', 'This development instance does not permit logging in with that domain.');
         }
 
         // The client ID should be the home page of your app.
-        Client::$clientID = sprintf('https://%s/', getenv('IBC_HOSTNAME'));
+        Client::$clientID = sprintf('https://%s/', $_ENV['IBC_HOSTNAME']);
 
         // The redirect URL is where the user will be returned to after they approve the request.
         Client::$redirectURL = $this->utils->getRedirectURL();
@@ -109,14 +81,7 @@ class AuthController extends Controller
         }
 
         if ($error) {
-            return $this->theme->render(
-                $response,
-                'auth/error',
-                [
-                    'error' => $error['error'],
-                    'errorDescription' => $error['error_description'],
-                ]
-            );
+            return $this->errorResponse($response, $error['error'], $error['error_description']);
         }
 
         // Store endpoints in session. Used after authorization to add/update the user.
@@ -151,7 +116,7 @@ class AuthController extends Controller
     public function callback(ServerRequestInterface $request, ResponseInterface $response, array $args)
     {
         // The client ID should be the home page of your app.
-        Client::$clientID = sprintf('https://%s/', getenv('IBC_HOSTNAME'));
+        Client::$clientID = sprintf('https://%s/', $_ENV['IBC_HOSTNAME']);
 
         // The redirect URL is where the user will be returned to after they approve the request.
         Client::$redirectURL = $this->utils->getRedirectURL();
@@ -160,14 +125,7 @@ class AuthController extends Controller
         list($indieauth_response, $error) = Client::complete($params);
 
         if ($error) {
-            return $this->theme->render(
-                $response,
-                'auth/error',
-                [
-                    'error' => $error['error'],
-                    'errorDescription' => $error['error_description'],
-                ]
-            );
+            return $this->errorResponse($response, $error['error'], $error['error_description']);
         }
 
         $me = $indieauth_response['me'];
@@ -214,32 +172,39 @@ class AuthController extends Controller
      */
     public function re_authorize(ServerRequestInterface $request, ResponseInterface $response, array $args)
     {
-        $user = $this->get_user();
+        $profile = $this->get_user();
 
         if ($request->isPost()) {
             $data = $request->getParsedBody();
+
+            $me = Client::normalizeMeURL($profile->url);
             $scopes = implode(' ', $data['scopes']);
 
-            $_SESSION['attempted_me'] = $user->url;
-            $_SESSION['auth_state'] = Client::generateStateParameter();
-            $_SESSION['authorization_endpoint'] = $user->authorization_endpoint;
-            $_SESSION['micropub_endpoint'] = $user->micropub_endpoint;
-            $_SESSION['token_endpoint'] = $user->token_endpoint;
+            // The client ID should be the home page of your app.
+            Client::$clientID = sprintf('https://%s/', $_ENV['IBC_HOSTNAME']);
 
-            $authorization_url = Client::buildAuthorizationURL(
-                $user->authorization_endpoint,
-                $user->url,
-                $this->utils->getRedirectURL(),
-                $this->utils->getClientID(),
-                $_SESSION['auth_state'],
-                $scopes
-            );
+            // The redirect URL is where the user will be returned to after they approve the request.
+            Client::$redirectURL = $this->utils->getRedirectURL();
+
+            $authorization_endpoint = Client::discoverAuthorizationEndpoint($me);
+            $token_endpoint = Client::discoverTokenEndpoint($me);
+            $micropub_endpoint = Client::discoverMicropubEndpoint($me);
+            list($authorization_url, $error) = Client::begin($me, $scopes);
+
+            if ($error) {
+                return $this->errorResponse($response, $error['error'], $error['error_description']);
+            }
+
+            // Store endpoints in session. Used after authorization to add/update the user.
+            $_SESSION['authorization_endpoint'] = $authorization_endpoint;
+            $_SESSION['micropub_endpoint'] = $micropub_endpoint;
+            $_SESSION['token_endpoint'] = $token_endpoint;
 
             return $response->withRedirect($authorization_url, 302);
         }
 
-        $headline = 'Additional Permission Needed';
-        $message = '<p> indiebookclub needs permission to delete posts from your site. </p> <p> Click the button below to re-authorize the app. </p>';
+        $headline = 'Additional Permission Requested';
+        $message = '<p> indiebookclub is requesting permission to delete posts from your site. </p> <p> Click the button below to re-authorize the app. </p>';
 
         return $this->theme->render(
             $response,
@@ -345,6 +310,15 @@ class AuthController extends Controller
         }
 
         return null;
+    }
+
+    private function errorResponse($response, string $error, string $errorDescription): ResponseInterface
+    {
+        return $this->theme->render(
+            $response,
+            'auth/error',
+            compact('error', 'errorDescription')
+        );
     }
 }
 

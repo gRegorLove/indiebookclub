@@ -30,24 +30,31 @@ $container['theme'] = function ($c) {
     $settings = $c->get('settings')['theme'];
     $theme = Theme::instance($settings['theme_path']);
     $theme->setLayout('default')
-    	->setData('title', 'indiebookclub')
+        ->setData('title', 'indiebookclub')
         ->setData('utils', $c->get('utils'));
     return $theme;
 };
 
+$container['notFoundHandler'] = function ($c) {
+    return function ($request, $response) use ($c) {
+        $response = $response->withStatus(404);
+        return $c->theme->render($response, '404');
+    };
+};
+
 $container['AuthController'] = function ($c) {
-	return new AuthController($c);
+    return new AuthController($c);
 };
 
 $container['PageController'] = function ($c) {
-	return new PageController($c);
+    return new PageController($c);
 };
 
 $container['IbcController'] = function ($c) {
-	return new IbcController($c);
+    return new IbcController($c);
 };
 
 $container['UsersController'] = function ($c) {
-	return new UsersController($c);
+    return new UsersController($c);
 };
 

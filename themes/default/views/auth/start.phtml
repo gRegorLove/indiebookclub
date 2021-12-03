@@ -1,25 +1,34 @@
 
-	<?php $this->import('partials/header'); ?>
+<?php $this->import('partials/header'); ?>
 
-	<?php if ($is_micropub_user): ?>
+<div class="content">
 
-		<h2> Awesome! We found your Micropub endpoint! </h2>
+<?php if ($is_micropub_user): ?>
 
-		<p> Click below to authorize this app to create posts at your Micropub endpoint. </p>
+    <h2> Sign In </h2>
 
-	<?php else: ?>
+    <p> indiebookclub is able to post to your website! </p>
+    <p> Click the button below to sign in and allow this app to post to your site. </p>
 
-		<h2> Would you like to use a hosted account? </h2>
+<?php else: ?>
 
-		<p> It looks like your site doesn’t support <a href="https://micropub.net">Micropub</a>. You can still use this site to track what you are reading and the posts will live here instead of on your own site. </p>
+    <h2> Would you like to use a hosted account? </h2>
 
-	<?php endif; ?>
+    <p> It looks like your site doesn’t support posting with <a href="https://micropub.net/">Micropub</a>. You can still use indiebookclub to track what you are reading and the posts will be here instead of on your own site. You can export your posts in HTML at any point. </p>
 
-	<p> <a href="<?=$authorization_url;?>"><?= $is_micropub_user ? 'Authorize' : 'Sign In' ?></a> </p>
+<?php endif; ?>
 
-	<div class="callout">
-		Your authorization endpoint: <code><?= $authorization_endpoint ?: 'none' ?></code><br>
-		Your token endpoint: <code><?= $token_endpoint ?: 'none' ?></code><br>
-		Your Micropub endpoint: <code><?= $micropub_endpoint ?: 'none' ?></code>
-	</div>
+    <p> <b><a href="<?=$authorization_url;?>">Sign In</a></b> </p>
+
+    <details class="callout">
+        <summary>Debugging Information:</summary>
+        <div>
+            indiebookclub found the following endpoints on your site:<br>
+            authorization endpoint: <code><?= $authorization_endpoint ?: 'none' ?></code><br>
+            token endpoint: <code><?= $token_endpoint ?: 'none' ?></code><br>
+            Micropub endpoint: <code><?= $micropub_endpoint ?: 'none' ?></code>
+        </div>
+    </details>
+
+</div>
 

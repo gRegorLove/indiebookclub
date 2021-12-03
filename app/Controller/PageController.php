@@ -7,6 +7,8 @@
  * @license https://opensource.org/licenses/MIT MIT
  */
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use Psr\Http\Message\ResponseInterface;
@@ -38,6 +40,15 @@ class PageController extends Controller
     {
         $this->setTitle('Documentation');
         return $this->theme->render($response, 'documentation');
+    }
+
+    /**
+     * Route that handles the updates page
+     */
+    public function updates(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    {
+        $this->setTitle('Updates');
+        return $this->theme->render($response, 'updates');
     }
 }
 

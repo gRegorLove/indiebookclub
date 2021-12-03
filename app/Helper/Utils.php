@@ -164,7 +164,7 @@ class Utils
      */
     public function hostname($url)
     {
-        return preg_replace('#^www\.(.+\.)#i', '$1', parse_url($url, PHP_URL_HOST));
+        return preg_replace('#^www\.(.+\.)#i', '$1', strtolower(parse_url($url, PHP_URL_HOST)));
     }
 
     /**
@@ -212,15 +212,16 @@ class Utils
     }
 
     /**
-     * Normalize a comma-separated string of categories
-     * @param string $category
+     * Normalize a string of text with provided separator
+     *
+     * Removes extra whitespace between parts of the input string.
      */
-    public function normalize_category($category)
+    public function normalizeSeparatedString(string $input, string $separator = ','): string
     {
-        $categories = explode(',', $category);
-        $categories = array_map('trim', $categories);
-        $categories = array_filter($categories);
-        return implode(',', $categories);
+        $parts = explode($separator, $input);
+        $parts = array_map('trim', $parts);
+        $parts = array_filter($parts);
+        return implode($separator, $parts);
     }
 
     /**
@@ -229,7 +230,7 @@ class Utils
      */
     public function get_category_array($category)
     {
-        return explode(',', $this->normalize_category($category));
+        return explode(',', $this->normalizeSeparatedString($category));
     }
 
     /**
@@ -391,6 +392,12 @@ class Utils
         }
 
         return $url . $join_char . http_build_query($params);
+    }
+
+    public function hasMicropubDelete(string $scopes): bool
+    {
+        $scopes = explode(' ', $this->normalizeSeparatedString($scopes, ' '));
+        return in_array('delete', $scopes);
     }
 
     /**
