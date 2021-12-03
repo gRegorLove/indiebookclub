@@ -12,6 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated page header to indicate domain you are signed in as, profile link, sign out link, and new post button
 
 ### Added
-- Support for micropub `visibility` property (#4)
-- Support for micropub delete after re-authorizing and granting `delete` scope (#13)
+- Support for micropub `visibility` property [#4](https://github.com/gRegorLove/indiebookclub/issues/4)
+- Support for micropub delete after re-authorizing and granting `delete` scope [#13](https://github.com/gRegorLove/indiebookclub/issues/13)
 
