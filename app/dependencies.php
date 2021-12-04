@@ -35,6 +35,12 @@ $container['theme'] = function ($c) {
     return $theme;
 };
 
+$container['errorHandler'] = function ($c) {
+    return function ($request, $response, $exception) use ($c) {
+        $c->logger->error($exception->getMessage(), $exception->getTrace());
+    };
+};
+
 $container['notFoundHandler'] = function ($c) {
     return function ($request, $response) use ($c) {
         $response = $response->withStatus(404);
