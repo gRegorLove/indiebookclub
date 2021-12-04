@@ -612,7 +612,7 @@ class IbcController extends Controller
             'summary' => [$summary],
             'read-status' => [$data['read_status']],
             'read-of' => [$cite],
-            'visibility' => [$data['visibility']],
+            'visibility' => $data['visibility'],
         ];
 
         if ($data['tags']) {
