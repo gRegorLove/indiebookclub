@@ -319,7 +319,7 @@ class Utils
 
     public function setAccessToken(array $indieauth_response)
     {
-        $access_token = $indieauth_response['access_token'] ?? null;
+        $access_token = $indieauth_response['response']['access_token'] ?? null;
         if ($access_token) {
             $_SESSION['auth']['access_token'] = $access_token;
         }

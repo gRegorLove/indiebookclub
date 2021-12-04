@@ -24,13 +24,15 @@
           "uid": ["isbn:<b>ISBN</b>"]
         }
       }
-    ]
+    ],
+    "visibility": "public"
   }
 }</pre>
 
             <p> <code>read-status</code> will be “to-read”, “reading”, or “finished” based on your selection. </p>
             <p> <code>uid</code> will have a scheme of either <code>isbn:</code> or <code>doi:</code> based on your selection </p>
             <p> <code>author</code> and <code>uid</code> properties will only be included if you enter those fields. </p>
+            <p> <code>visibility</code> will be “public”, “private”, or “unlisted” based on your selection. The private and unlisted options are only available if your Micropub endpoint indicates it supports them. </p>
 
       <h3 id="query"> Query Parameters </h3>
       <p> The <a href="<?=$utils->router->pathFor('new');?>">new post</a> form accepts URL query parameters to pre-populate fields. This can be used with bookmarklets to make adding new posts easier. </p>

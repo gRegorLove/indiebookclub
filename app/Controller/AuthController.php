@@ -270,7 +270,7 @@ class AuthController extends Controller
     {
         $user->url = $indieauth_response['me'];
         $user->profile_slug = $this->utils->hostname($indieauth_response['me']);
-        $user->token_scope = $indieauth_response['scope'] ?? '';
+        $user->token_scope = $indieauth_response['response']['scope'] ?? '';
         $user->set_expr('date_created', 'NOW()');
         $user->set_expr('last_login', 'NOW()');
 
@@ -283,7 +283,7 @@ class AuthController extends Controller
 
     private function updateUser(ORM $user, array $indieauth_response): ?ORM
     {
-        $user->token_scope = $indieauth_response['scope'] ?? '';
+        $user->token_scope = $indieauth_response['response']['scope'] ?? '';
         $user->set_expr('last_login', 'NOW()');
 
         if ($user->save()) {
