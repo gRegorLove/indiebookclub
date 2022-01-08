@@ -1,6 +1,4 @@
 <?php
-namespace App\Helper;
-
 /**
  * Helper utilities used in indiebookclub.
  *
@@ -15,10 +13,15 @@ namespace App\Helper;
  * @see https://github.com/aaronpk/Teacup
  */
 
-use \BarnabyWalters\Mf2 as Mf2helper;
-use \DateTime;
-use \DateInterval;
-use \Mf2;
+declare(strict_types=1);
+
+namespace App\Helper;
+
+use BarnabyWalters\Mf2 as Mf2helper;
+use DateTime;
+use DateInterval;
+use Mf2;
+use ORM;
 
 class Utils
 {
@@ -30,7 +33,8 @@ class Utils
     /**
      * @param $router
      */
-    public function __construct($router) {
+    public function __construct($router)
+    {
         $this->router = $router;
     }
 
@@ -41,7 +45,8 @@ class Utils
      * @copyright 2014 Aaron Parecki
      * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
      */
-    public function session($key) {
+    public function session(string $key)
+    {
         if (array_key_exists($key, $_SESSION)) {
             return $_SESSION[$key];
         }
@@ -54,7 +59,8 @@ class Utils
      * @copyright 2014 Aaron Parecki
      * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
      */
-    public function hasProperty($input, $property, $default=null) {
+    public function hasProperty($input, $property, $default=null)
+    {
         if (is_array($property)) {
             $result = true;
             foreach ($property as $key) {
@@ -75,7 +81,8 @@ class Utils
      * Sanitize a value for display in HTML
      * @param string $value
      */
-    public function sanitize($value) {
+    public function sanitize($value)
+    {
         if (!$value) {
             return '';
         }
@@ -103,7 +110,8 @@ class Utils
      * @param string $value
      * @param bool $output = true, echo the value; false, return the value
      */
-    public function markSelected($field, $value, $output = true) {
+    public function markSelected($field, $value, $output = true)
+    {
         $return_value = ' selected';
 
         if ((is_array($field) && in_array($value, $field) ) || ($field == $value)) {
@@ -121,7 +129,8 @@ class Utils
      * @param string $value
      * @param bool $output = true, echo the value; false, return the value
      */
-    public function markChecked($field, $value, $output = true) {
+    public function markChecked($field, $value, $output = true)
+    {
         $return_value = ' checked';
 
         if ((is_array($field) && in_array($value, $field) ) || ($field == $value)) {
@@ -136,14 +145,16 @@ class Utils
     /**
      * Get the redirect URL for authorization callback
      */
-    public function getRedirectURL() {
+    public function getRedirectURL()
+    {
         return getenv('IBC_BASE_URL') . $this->router->pathFor('auth_callback');
     }
 
     /**
      * Get the client ID
      */
-    public function getClientID() {
+    public function getClientID()
+    {
         return trim(getenv('IBC_BASE_URL'), '/');
     }
 
@@ -151,15 +162,17 @@ class Utils
      * Get the hostname from a URL
      * @param string $url
      */
-    public function hostname($url) {
-        return preg_replace('#^www\.(.+\.)#i', '$1', parse_url($url, PHP_URL_HOST));
+    public function hostname($url)
+    {
+        return preg_replace('#^www\.(.+\.)#i', '$1', strtolower(parse_url($url, PHP_URL_HOST)));
     }
 
     /**
      * Get a human-friendly read status
      * @param string $read_status
      */
-    public function get_read_status_for_humans($read_status) {
+    public function get_read_status_for_humans($read_status)
+    {
         switch ($read_status) {
             case 'finished':
                 $text = 'Finished reading';
@@ -182,7 +195,8 @@ class Utils
      * Get the microformat read-status property
      * @param string $read_status
      */
-    public function get_read_status_microformat($read_status) {
+    public function get_read_status_microformat($read_status)
+    {
         return sprintf('<data class="p-read-status" value="%s">%s</data>',
             $read_status,
             $this->get_read_status_for_humans($read_status)
@@ -192,27 +206,31 @@ class Utils
     /**
      * Get the microformat classes for the URL
      */
-    public function get_url_microformats($entry) {
+    public function get_url_microformats($entry)
+    {
         return ($entry->canonical_url) ? 'u-url u-uid' : 'u-url';
     }
 
     /**
-     * Normalize a comma-separated string of categories
-     * @param string $category
+     * Normalize a string of text with provided separator
+     *
+     * Removes extra whitespace between parts of the input string.
      */
-    public function normalize_category($category) {
-        $categories = explode(',', $category);
-        $categories = array_map('trim', $categories);
-        $categories = array_filter($categories);
-        return implode(',', $categories);
+    public function normalizeSeparatedString(string $input, string $separator = ','): string
+    {
+        $parts = explode($separator, $input);
+        $parts = array_map('trim', $parts);
+        $parts = array_filter($parts);
+        return implode($separator, $parts);
     }
 
     /**
      * Convert a comma-separated string of categories to an array
      * @param string $category
      */
-    public function get_category_array($category) {
-        return explode(',', $this->normalize_category($category));
+    public function get_category_array($category)
+    {
+        return explode(',', $this->normalizeSeparatedString($category));
     }
 
     /**
@@ -220,7 +238,8 @@ class Utils
      * @copyright 2014 Aaron Parecki
      * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
      */
-    public function tz_seconds_to_offset($seconds) {
+    public function tz_seconds_to_offset($seconds)
+    {
         return ($seconds < 0 ? '-' : '+') . sprintf('%02d:%02d', abs($seconds/60/60), ($seconds/60)%60);
     }
 
@@ -229,7 +248,8 @@ class Utils
      * @copyright 2014 Aaron Parecki
      * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
      */
-    public function tz_offset_to_seconds($offset) {
+    public function tz_offset_to_seconds($offset)
+    {
         if (preg_match('/([+-])(\d{2}):?(\d{2})/', $offset, $match)) {
             $sign = ($match[1] == '-' ? -1 : 1);
             return (($match[2] * 60 * 60) + ($match[3] * 60)) * $sign;
@@ -243,7 +263,8 @@ class Utils
      * @copyright 2014 Aaron Parecki
      * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
      */
-    public function get_entry_date($entry) {
+    public function get_entry_date($entry)
+    {
         $date = new DateTime($entry->published);
 
         if ($entry->tz_offset > 0) {
@@ -261,7 +282,8 @@ class Utils
      * @copyright 2014 Aaron Parecki
      * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
      */
-    public function get_entry_url($entry, $user) {
+    public function get_entry_url($entry, $user)
+    {
         if ($entry->canonical_url) {
             return $entry->canonical_url;
         } elseif ($user) {
@@ -273,10 +295,41 @@ class Utils
         return '';
     }
 
+    public function get_visibility_options($user)
+    {
+        if (!$user->supported_visibility) {
+            return ['Public'];
+        }
+
+        $supported = json_decode($user->supported_visibility);
+
+        foreach (['public', 'private', 'unlisted'] as $value) {
+            if (in_array($value, $supported)) {
+                $options[] = ucfirst($value);
+            }
+        }
+
+        # IBC does not support any of the listed options
+        if (!$options) {
+            $options = ['Public'];
+        }
+
+        return $options;
+    }
+
+    public function setAccessToken(array $indieauth_response)
+    {
+        $access_token = $indieauth_response['response']['access_token'] ?? null;
+        if ($access_token) {
+            $_SESSION['auth']['access_token'] = $access_token;
+        }
+    }
+
     /**
      * Get access_token from $_SESSION
      */
-    public function get_access_token() {
+    public function getAccessToken()
+    {
         if (isset($_SESSION['auth']['access_token'])) {
             return $_SESSION['auth']['access_token'];
         }
@@ -284,21 +337,67 @@ class Utils
         return '';
     }
 
-    /**
-     * @author Aaron Parecki, https://aaronparecki.com
-     * @copyright 2014 Aaron Parecki
-     * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
-     */
-    public function add_hcard_info($user, $hcard) {
-        if ($user && $hcard) {
-            if (Mf2helper\hasProp($hcard, 'name')) {
-                $user->name = Mf2helper\getPlaintext($hcard, 'name');
+    public function setUserData(?ORM $user = null, array $h_card = []): ?ORM
+    {
+        $authorization_endpoint = $this->session('authorization_endpoint');
+        $token_endpoint = $this->session('token_endpoint');
+        $micropub_endpoint = $this->session('micropub_endpoint');
+
+        if (!$user) {
+            $user = ORM::for_table('users')->create();
+        }
+
+        $user->type = $micropub_endpoint ? 'micropub' : 'local';
+
+        if ($authorization_endpoint) {
+            $user->authorization_endpoint = $authorization_endpoint;
+        }
+
+        if ($token_endpoint) {
+            $user->token_endpoint = $token_endpoint;
+        }
+
+        if ($micropub_endpoint) {
+            $user->micropub_endpoint = $micropub_endpoint;
+        }
+
+        if ($h_card) {
+            if (Mf2helper\hasProp($h_card, 'name')) {
+                $user->name = Mf2helper\getPlaintext($h_card, 'name');
             }
 
-            if (Mf2helper\hasProp($hcard, 'photo')) {
-                $user->photo_url = Mf2helper\getPlaintext($hcard, 'photo');
+            if (Mf2helper\hasProp($h_card, 'photo')) {
+                $user->photo_url = Mf2helper\getPlaintext($h_card, 'photo');
             }
         }
+
+        $user->set_expr('date_created', 'NOW()');
+        $user->set_expr('last_login', 'NOW()');
+
+        return $user;
+    }
+
+    /**
+     * Append query params to a URL
+     */
+    public function build_url($url, $params = [])
+    {
+        if (!$params) {
+            return $url;
+        }
+
+        $join_char = '?';
+        if (parse_url($url, PHP_URL_QUERY)) {
+            $join_char = '&';
+        }
+
+        return $url . $join_char . http_build_query($params);
+    }
+
+    public function hasMicropubDelete(string $scopes): bool
+    {
+        $scopes = explode(' ', $this->normalizeSeparatedString($scopes, ' '));
+        return in_array('delete', $scopes);
     }
 
     /**
@@ -311,7 +410,8 @@ class Utils
      * @copyright 2014 Aaron Parecki
      * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
      */
-    public function micropub_post($endpoint, $params, $access_token, $json = false) {
+    public function micropub_post($endpoint, $params, $access_token, $json = false)
+    {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $endpoint);
         curl_setopt($ch, CURLOPT_POST, true);
@@ -322,13 +422,11 @@ class Utils
         $httpheaders = ['Authorization: Bearer ' . $access_token];
 
         if (!$json) {
-            $params = array_merge(
-                [
-                    'h' => 'entry',
-                    'access_token' => $access_token
-                ],
-                $params
-            );
+            $params['access_token'] = $access_token;
+
+            if (!array_key_exists('action', $params)) {
+                $params['h'] = 'entry';
+            }
         }
 
         if ($json) {
@@ -368,15 +466,9 @@ class Utils
      * @copyright 2014 Aaron Parecki
      * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
      */
-    public function micropub_get($endpoint, $params, $access_token) {
-        $url = parse_url($endpoint);
-
-        if (!k($url, 'query')) {
-            $url['query'] = http_build_query($params);
-        } else {
-            $url['query'] .= '&' . http_build_query($params);
-        }
-        $endpoint = http_build_url($url);
+    public function micropub_get($endpoint, $params, $access_token)
+    {
+        $endpoint = $this->build_url($endpoint, $params);
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $endpoint);
@@ -390,7 +482,7 @@ class Utils
         $data = [];
 
         if ($response) {
-            $data = @json_decode($response, true);
+            $data = @json_decode($response, true) ?? [];
         }
 
         $error = curl_error($ch);
@@ -409,13 +501,14 @@ class Utils
      * @copyright 2014 Aaron Parecki
      * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
      */
-    public function get_micropub_config($user) {
+    public function get_micropub_config($user)
+    {
         $targets = [];
 
         $r = micropub_get(
             $user->micropub_endpoint,
             ['q' => 'config'],
-            $this->get_access_token()
+            $this->getAccessToken()
         );
 
         if ($r['data'] && is_array($r['data']) && array_key_exists('media-endpoint', $r['data'])) {
@@ -435,7 +528,8 @@ class Utils
      * @copyright 2014 Aaron Parecki
      * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
      */
-    public function parse_headers($headers) {
+    public function parse_headers($headers)
+    {
         $retVal = [];
         $fields = explode("\r\n", preg_replace('/\x0D\x0A[\x09\x20]+/', ' ', $headers));
         foreach ($fields as $field) {
@@ -457,7 +551,8 @@ class Utils
     /**
      * @see https://github.com/aaronpk/Quill/commit/bb0752a72692d03b61f1719dca2a7cdc2b3052cc
      */
-    public function revoke_micropub_token($access_token, $token_endpoint) {
+    public function revoke_micropub_token($access_token, $token_endpoint)
+    {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $token_endpoint);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -472,7 +567,8 @@ class Utils
      * Parse a URL for read-of microformats
      * @param string $url
      */
-    public function parse_read_of($url) {
+    public function parse_read_of($url)
+    {
         $result = array_fill_keys(['title', 'authors', 'uid'], '');
         $url = filter_var($url, FILTER_SANITIZE_URL);
 

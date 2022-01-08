@@ -1,12 +1,12 @@
 <?php
-namespace Mwhite\PhpIsbn;
-
 /**
  * @copyright 2012 Michael White
  * @author Michael White, http://mwhite.info/
  * @license https://opensource.org/licenses/MIT MIT
  * @see https://github.com/mwhite/php-isbn
  */
+
+namespace Mwhite\PhpIsbn;
 
 class Isbn {
 

@@ -1,46 +1,79 @@
 <?php
 
-    $authors = $uid = $display_tags = '';
+$profile = $profile ?? null;
 
-    if ($entry->authors) {
-        $authors = sprintf(' by <span class="p-author">%s</span>', htmlspecialchars($entry->authors));
+$authors = '';
+if ($entry->authors) {
+    $authors = sprintf(' by <span class="p-author">%s</span>', htmlspecialchars($entry->authors));
+}
+
+$uid = '';
+if ($entry->doi) {
+    $uid = sprintf(' <span class="isbn p-uid">doi:%s</span>', $entry->doi);
+} elseif ($entry->isbn) {
+    $uid = sprintf(' <span class="isbn">ISBN: <a href="%s" class="p-uid">%s</a></span>',
+        $utils->router->pathFor('isbn', ['isbn' => $entry->isbn]),
+        htmlspecialchars($entry->isbn)
+    );
+}
+
+$display_tags = '';
+if ($entry->category) {
+    $tags = explode(',', $entry->category);
+    foreach ($tags as $tag) {
+        $display_tags .= sprintf('<span class="p-category">%s</span>, ', htmlspecialchars($tag));
+    }
+    $display_tags = sprintf('<div class="post-meta">Tags: %s</div>', trim($display_tags, ', '));
+}
+
+$display_visibility = '';
+if ($entry->visibility != 'public') {
+    $icon = '';
+    switch ($entry->visibility) {
+        case 'private':
+            $icon = '🔒';
+            break;
+
+        case 'unlisted':
+            $icon = '👻';
+            break;
     }
 
-    if ($entry->doi) {
-        $uid = sprintf(' <span class="isbn p-uid">doi:%s</span>', $entry->doi);
-    } elseif ($entry->isbn) {
-        $uid = sprintf(' <span class="isbn">ISBN: <a href="%s" class="p-uid">%s</a></span>',
-            $utils->router->pathFor('isbn', ['isbn' => $entry->isbn]),
-            htmlspecialchars($entry->isbn)
+    $display_visibility = sprintf('<div class="post-meta">Visibility: %s %s</div>',
+        $entry->visibility,
+        $icon
+    );
+}
+
+$display_delete = '';
+$is_caching = $is_caching ?? false;
+if (!$is_caching) {
+    if ($utils->session('user_id') === $entry->user_id) {
+        $display_delete = sprintf('<div class="post-meta"><a href="%s">🗑️ Delete</a></div>',
+            $utils->router->pathFor('delete', ['id' => $entry->id])
         );
     }
+}
 
-    if ($entry->category) {
-        $tags = explode(',', $entry->category);
-        foreach ($tags as $tag) {
-            $display_tags .= sprintf('<span class="p-category">%s</span>, ', htmlspecialchars($tag));
-        }
-        $display_tags = sprintf('<div class="tags">Tags: %s</div>', trim($display_tags, ', '));
-    }
-
-    $entry_date = $utils->get_entry_date($entry);
-    $entry_url = $utils->get_entry_url($entry, $user);
+$entry_date = $utils->get_entry_date($entry);
+$entry_url = $utils->get_entry_url($entry, $profile);
 ?>
 
 <li class="h-entry">
 
-<?php $this->import('partials/author-block', ['entry' => $entry, 'user' => $user]); ?>
+<?php $this->import('partials/author-block', ['entry' => $entry, 'user' => $profile]); ?>
 
     <div class="content">
 
         <div class="summary p-summary">
             <?=$utils->get_read_status_microformat($entry->read_status);?>: <span class="p-read-of h-cite"><cite class="p-name"><?=htmlspecialchars($entry->title);?></cite><?=$authors;?><?=$uid;?></span>
-
         </div>
         <div class="date">
             <a href="<?= $entry_url; ?>" class="<?= $utils->get_url_microformats($entry); ?>"><time class="dt-published" datetime="<?= $entry_date->format('Y-m-d H:i:sP') ?>"><?= $entry_date->format('F j, Y g:ia P') ?></time></a>
         </div>
         <?=$display_tags;?>
+        <?=$display_visibility;?>
+        <?=$display_delete?>
 
     </div>
 

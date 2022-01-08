@@ -1,46 +1,106 @@
 
-	<?php $this->import('partials/header'); ?>
+<?php $this->import('partials/header'); ?>
 
-	<div class="content">
+<div class="content">
 
-		<h2> Settings </h2>
-		<p> You are signed in as <b><?=$user->url;?></b>. <a href="<?=$utils->router->pathFor('signout');?>">Sign Out?</a> <span class="help-block">indiebookclub v<?=$version;?></span> </p>
+    <h2> Settings </h2>
+
+<?php
+    if (array_key_exists('updated', $_GET)) {
+        echo sprintf('<p class="alert alert-success"> Settings updated </p>');
+    }
+?>
+
+    <div class="mb-1">
+        You are signed in as <b><?=$user->url;?></b>. <a href="<?=$utils->router->pathFor('signout');?>">Sign Out?</a> <span class="help-block">indiebookclub v<?=$version;?></span>
+    </div>
 
 <?php if ($user->micropub_endpoint): ?>
 
-		<h3> Micropub </h3>
+    <h3> Micropub </h3>
 
-		<p> <b>scope</b><br>
-			<span class="help-block">Should be a space-separated list of permissions including “create” or “post”</span>
-			<?=$user->token_scope;?> </p>
+<?php
+$display_visibility_options = '';
+foreach ($options_visibility as $label) {
+    $value = strtolower($label);
+    $selected = $utils->markSelected($value, $user->default_visibility, false);
+    $display_visibility_options .= sprintf('<option value="%s"%s>%s</option>',
+        $value,
+        $selected,
+        $label
+    );
+}
 
-		<p> <b>micropub endpoint</b><br>
-			<span class="help-block">Should be a URL</span>
-			<?=$user->micropub_endpoint;?> </p>
+$display_visibility = 'None indicated. Defaults to: public';
+if ($user->supported_visibility) {
+    if ($supported = json_decode($user->supported_visibility)) {
+        $display_visibility = implode(', ', $supported);
+    }
+}
+?>
 
-		<p> <b>access token</b><br>
-			<span class="help-block">Should be greater than length 0</span>
-			String of length <b><?= strlen($utils->get_access_token()) ?></b><?= (strlen($utils->get_access_token()) > 0) ? (', ending in <code>' . substr($utils->get_access_token(), -7) . '</code>') : '' ?> </p>
+    <form method="post" action="<?=$utils->router->pathFor('settings_update');?>">
+        <div class="mb-1">
+            <b><label for="i_default_visibility">Default Visibility:</label></b>
+            <span class="help-block">The new post form will default to this setting</span>
+            <fieldset class="one-line-form">
+                <select name="default_visibility" id="i_default_visibility" required>
+                    <?=$display_visibility_options;?>
+                </select>
+                <input type="submit" class="btn btn-default" value="Update">
+            </fieldset>
+        </div>
+    </form>
 
-		<?php if ($user->last_micropub_response): ?>
+    <div class="mb-1">
+        <b>visibility</b><br>
+        <span class="help-block">The visibility options your site supports</span>
+        <?=$display_visibility;?>
+    </div>
 
-		<p> <b>Last response from your Micropub endpoint</b><br>
-		<textarea readonly style="width: 100%; min-height: 240px;"><?= htmlspecialchars($user->last_micropub_response); ?></textarea>
+    <div class="mb-1">
+        <b>scope</b><br>
+        <span class="help-block">Should be a space-separated list of permissions including “create” or “post”</span>
+        <?=$user->token_scope;?>
+    </div>
 
-		<?php endif; ?>
+    <div class="mb-1">
+        <b>micropub endpoint</b><br>
+        <span class="help-block">Should be a URL</span>
+        <?=$user->micropub_endpoint;?>
+    </div>
 
-		<h3> Reset Login </h3>
+    <div class="mb-1">
+        <b>access token</b><br>
+        <span class="help-block">Should be greater than length 0</span>
+        String of length <b><?= strlen($utils->getAccessToken()) ?></b><?= (strlen($utils->getAccessToken()) > 0) ? (', ending in <code>' . substr($utils->getAccessToken(), -7) . '</code>') : '' ?>
+    </div>
 
-		<p> Clicking this button will tell your token endpoint to revoke the token. indiebookclub will forget the access token stored, forget all cached endpoints, and sign you out. If you sign back in, you will start over and see the authorization screen for your endpoints. </p>
+    <?php if ($user->last_micropub_response): ?>
 
-		<form method="get" action="<?=$utils->router->pathFor('auth_reset');?>"><input type="submit" class="btn btn-default" value="Reset Login"></form>
+    <div class="mb-1">
+        <b>Last response from your Micropub endpoint</b><br>
+        <textarea readonly style="font-family: monospace; font-size: 1em; width: 100%; min-height: 240px;"><?= htmlspecialchars($user->last_micropub_response); ?></textarea>
+    </div>
+
+    <?php endif; ?>
+
+    <div class="mb-1">
+        <h3> Reset Login </h3>
+
+        <p> Clicking this button will tell your token endpoint to revoke the token. indiebookclub will forget the access token stored, forget all cached endpoints, and sign you out. If you sign back in, you will start over and see the authorization screen for your endpoints. </p>
+
+        <form method="get" action="<?=$utils->router->pathFor('auth_reset');?>"><input type="submit" class="btn btn-default" value="Reset Login"></form>
+    </div>
 
 <?php endif; ?>
 
-		<h3> Export Posts </h3>
-		<p> Click this button to download an HTML export of all your posts. </p>
+    <div class="mb-1">
+        <h3> Export Posts </h3>
+        <p> Click this button to download an HTML export of all your posts. </p>
 
-		<form method="get" action="<?=$utils->router->pathFor('export');?>"><input type="submit" class="btn btn-default" value="Export Posts"></form>
+        <form method="get" action="<?=$utils->router->pathFor('export');?>"><input type="submit" class="btn btn-default" value="Export Posts"></form>
+    </div>
 
-	</div>
+</div>
 

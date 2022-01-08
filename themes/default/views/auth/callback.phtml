@@ -1,68 +1,68 @@
 
-	<?php $this->import('partials/header'); ?>
+    <?php $this->import('partials/header'); ?>
 
 <?php if ($tokenEndpoint): ?>
 
-	<?php if (!$auth): ?>
+    <?php if (!$auth): ?>
 
-		<h2> Bad response from token endpoint </h2>
-		<p> Your token endpoint returned a response that was not understood. </p>
+        <h2> Bad response from token endpoint </h2>
+        <p> Your token endpoint returned a response that was not understood. </p>
 
-	<?php else: ?>
+    <?php else: ?>
 
-		<?php if ($utils->hasProperty($auth, 'error')): ?>
+        <?php if ($utils->hasProperty($auth, 'error')): ?>
 
-			<h2> Error </h2>
+            <h2> Error </h2>
 
-			<p> Received an error response from the token endpoint: </p>
-			<div class="attention">
-				<h3> <?= $auth['error']; ?> </h3>
-				<?= $utils->hasProperty($auth, 'error_description') ? ('<p>'.$auth['error_description'].'</p>') : '' ?>
-			</div>
+            <p> Received an error response from the token endpoint: </p>
+            <div class="attention">
+                <h3> <?= $auth['error']; ?> </h3>
+                <?= $utils->hasProperty($auth, 'error_description') ? ('<p>'.$auth['error_description'].'</p>') : '' ?>
+            </div>
 
-		<?php else: ?>
+        <?php else: ?>
 
-			<!-- Check for all the required parts of the token -->
-			<?php if ($utils->hasProperty($auth, array('me','access_token','scope'))): ?>
+            <!-- Check for all the required parts of the token -->
+            <?php if ($utils->hasProperty($auth, array('me','access_token','scope'))): ?>
 
-				<h2> Success! </h2>
+                <h2> Success! </h2>
 
-				<p> All required values were found! You are now signed in. </p>
-				<p> <a href="<?= $redirect ?>" class="btn btn-primary">Continue</a> </p>
+                <p> All required values were found! You are now signed in. </p>
+                <p> <a href="<?= $redirect ?>">Continue</a> </p>
 
-			<?php else: ?>
+            <?php else: ?>
 
-				<?php if (!$utils->hasProperty($auth, 'access_token')): ?>
-					<h3> Missing <code>access_token</code> </h3>
-					<p> The token endpoint did not return an access token. The <code>access_token</code> parameter is the token the client will use to make requests to the Micropub endpoint. </p>
-				<?php endif; ?>
+                <?php if (!$utils->hasProperty($auth, 'access_token')): ?>
+                    <h3> Missing <code>access_token</code> </h3>
+                    <p> The token endpoint did not return an access token. The <code>access_token</code> parameter is the token the client will use to make requests to the Micropub endpoint. </p>
+                <?php endif; ?>
 
-				<?php if (!$utils->hasProperty($auth, 'me')): ?>
-					<h3> Missing <code>me</code> </h3>
-					<p> The token endpoint did not return a “me” parameter. The <code>me</code> parameter lets this client know what user the token is for. </p>
-				<?php endif; ?>
+                <?php if (!$utils->hasProperty($auth, 'me')): ?>
+                    <h3> Missing <code>me</code> </h3>
+                    <p> The token endpoint did not return a “me” parameter. The <code>me</code> parameter lets this client know what user the token is for. </p>
+                <?php endif; ?>
 
-				<?php if (!$utils->hasProperty($auth, 'scope')): ?>
-					<h3> Missing <code>scope</code> </h3>
-					<p> The token endpoint did not return a “scope” parameter. The <code>scope</code> parameter lets this client what permission the token represents. </p>
-				<?php endif; ?>
+                <?php if (!$utils->hasProperty($auth, 'scope')): ?>
+                    <h3> Missing <code>scope</code> </h3>
+                    <p> The token endpoint did not return a “scope” parameter. The <code>scope</code> parameter lets this client what permission the token represents. </p>
+                <?php endif; ?>
 
-			<?php endif; ?>
+            <?php endif; ?>
 
-		<?php endif; ?>
+        <?php endif; ?>
 
-	<?php endif; ?>
+    <?php endif; ?>
 
-	<h2> Token endpoint response </h2>
+    <h2> Token endpoint response </h2>
 
-	<p> Your token endpoint <b><?= $tokenEndpoint ?></b> responded with a token <b><?= strlen($utils->get_access_token()) ?></b> characters long, ending in <code><?=substr($utils->get_access_token(), -7);?></code>. </p>
+    <p> Your token endpoint <b><?= $tokenEndpoint ?></b> responded with a token <b><?= strlen($utils->get_access_token()) ?></b> characters long, ending in <code><?=substr($utils->get_access_token(), -7);?></code>. </p>
 
 <?php else: ?>
 
 
-	<h2> Error </h2>
+    <h2> Error </h2>
 
-	<p> Could not find your token endpoint. We found it last time, so double check nothing on your website has changed in the mean time. </p>
+    <p> Could not find your token endpoint. We found it last time, so double check nothing on your website has changed in the mean time. </p>
 
 <?php endif;
 

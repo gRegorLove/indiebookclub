@@ -1,12 +1,15 @@
 <?php
-use \App\Controller\AuthController;
-use \App\Controller\IbcController;
-use \App\Controller\PageController;
-use \App\Controller\UsersController;
-use \App\Helper\Utils;
-use \Coreorm\Slim3\Theme;
-use \Monolog\Handler\StreamHandler;
-use \Monolog\Logger;
+
+declare(strict_types=1);
+
+use App\Controller\AuthController;
+use App\Controller\IbcController;
+use App\Controller\PageController;
+use App\Controller\UsersController;
+use App\Helper\Utils;
+use Coreorm\Slim3\Theme;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 
 ORM::configure('mysql:host=' . getenv('IBC_DB_HOST') . ';dbname=' . getenv('IBC_DB_NAME'));
 ORM::configure('username', getenv('IBC_DB_USERNAME'));
@@ -27,24 +30,37 @@ $container['theme'] = function ($c) {
     $settings = $c->get('settings')['theme'];
     $theme = Theme::instance($settings['theme_path']);
     $theme->setLayout('default')
-    	->setData('title', 'indiebookclub')
+        ->setData('title', 'indiebookclub')
         ->setData('utils', $c->get('utils'));
     return $theme;
 };
 
+$container['errorHandler'] = function ($c) {
+    return function ($request, $response, $exception) use ($c) {
+        $c->logger->error($exception->getMessage(), $exception->getTrace());
+    };
+};
+
+$container['notFoundHandler'] = function ($c) {
+    return function ($request, $response) use ($c) {
+        $response = $response->withStatus(404);
+        return $c->theme->render($response, '404');
+    };
+};
+
 $container['AuthController'] = function ($c) {
-	return new AuthController($c);
+    return new AuthController($c);
 };
 
 $container['PageController'] = function ($c) {
-	return new PageController($c);
+    return new PageController($c);
 };
 
 $container['IbcController'] = function ($c) {
-	return new IbcController($c);
+    return new IbcController($c);
 };
 
 $container['UsersController'] = function ($c) {
-	return new UsersController($c);
+    return new UsersController($c);
 };
 

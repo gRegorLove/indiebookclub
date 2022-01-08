@@ -11,12 +11,12 @@
 <body>
 
 <div class="h-feed">
-    <h2 class="feed-name p-name"><?=$feed_name;?></h2>
+    <h2 class="p-name"><?=$feed_name;?></h2>
     <ul class="entries">
 
 <?php
     foreach ($entries as $entry) {
-        $this->import('partials/entry', ['entry' => $entry, 'user' => $user]);
+        $this->import('partials/entry', ['entry' => $entry, 'profile' => $user, 'is_caching' => true]);
     }
 ?>
 

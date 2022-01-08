@@ -1,40 +1,40 @@
 <?php
 
-	$alt = '';
-	$classes = 'photo';
-	$photo_url = '/images/no-photo.png';
-	$profile_photo_url = (is_null($user)) ? $entry->user_photo_url : $user->photo_url;
+    $alt = '';
+    $classes = 'photo';
+    $photo_url = '/images/no-photo.png';
+    $profile_photo_url = (is_null($user)) ? $entry->user_photo_url : $user->photo_url;
 
-	if ($profile_photo_url) {
-		$alt = 'photo of ';
-		$classes .= ' u-photo';
-		$photo_url = strip_tags($profile_photo_url);
-	}
+    if ($profile_photo_url) {
+        $alt = 'photo of ';
+        $classes .= ' u-photo';
+        $photo_url = strip_tags($profile_photo_url);
+    }
 
-	$author_photo = sprintf('<img src="%s" class="%s" alt="%s">',
-		$photo_url,
-		$classes,
-		$alt
-	);
+    $author_photo = sprintf('<img src="%s" class="%s" alt="%s">',
+        $photo_url,
+        $classes,
+        $alt
+    );
 
-	if (is_null($user)) {
-		$hostname = $utils->hostname($entry->user_url);
-		$profile_url = $utils->router->pathFor('profile', ['domain' => $entry->user_profile_slug]);
-		$name = $entry->user_name;
-		$url = $entry->user_url;
-	} else {
-		$hostname = $utils->hostname($user->url);
-		$profile_url = $utils->router->pathFor('profile', ['domain' => $user->profile_slug]);
-		$name = $user->name;
-		$url = $user->url;
-	}
+    if (is_null($user)) {
+        $hostname = $utils->hostname($entry->user_url);
+        $profile_url = $utils->router->pathFor('profile', ['domain' => $entry->user_profile_slug]);
+        $name = $entry->user_name;
+        $url = $entry->user_url;
+    } else {
+        $hostname = $utils->hostname($user->url);
+        $profile_url = $utils->router->pathFor('profile', ['domain' => $user->profile_slug]);
+        $name = $user->name;
+        $url = $user->url;
+    }
 ?>
 
-	<div class="author p-author h-card">
-		<a href="<?= $profile_url; ?>"><?= $author_photo; ?></a>
-		<div class="author-details">
-			<a class="name p-name" href="<?= $profile_url; ?>"><?= $name; ?></a><br>
-			<a class="url u-url" href="<?= $url; ?>"><?= $hostname; ?></a>
-		</div>
-	</div>
+    <div class="author p-author h-card">
+        <a href="<?= $profile_url; ?>"><?= $author_photo; ?></a>
+        <div class="author-details">
+            <a class="name p-name" href="<?= $profile_url; ?>"><?= $name; ?></a><br>
+            <a class="url u-url" href="<?= $url; ?>"><?= $hostname; ?></a>
+        </div>
+    </div>
 

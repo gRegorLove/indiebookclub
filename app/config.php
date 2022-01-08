@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 use Dotenv\Dotenv;
 
 try {
@@ -7,6 +10,8 @@ try {
 
     if (getenv('APP_ENV') !== 'production') {
         $dotenv->load();
+        error_reporting(E_ALL);
+        ini_set('display_errors', '1');
     }
 
     // Require these environment variables.
@@ -25,13 +30,22 @@ try {
 define('APP_DIR', dirname(__DIR__));
 date_default_timezone_set('UTC');
 
-session_start([
-    'name' => 'indiebookclub',
-    'cookie_lifetime' => 7 * 24 * 60 * 60,
-    'cookie_secure' => true,
-    'cookie_httponly' => true,
-    'cookie_domain' => getenv('IBC_HOSTNAME'),
-]);
+ini_set('session.name', 'indiebookclub');
+ini_set('session.auto_start', '0');
+ini_set('session.use_trans_sid', '0');
+ini_set('session.cookie_domain', getenv('IBC_HOSTNAME'));
+ini_set('session.cookie_path', '/');
+ini_set('session.use_strict_mode', '1');
+ini_set('session.use_cookies', '1');
+ini_set('session.use_only_cookies', '1');
+ini_set('session.cookie_lifetime', '0');
+ini_set('session.cookie_secure', '1');
+ini_set('session.cookie_httponly', '1');
+ini_set('session.cache_expire', '30');
+ini_set('session.sid_length', '48');
+ini_set('session.sid_bits_per_character', '6');
+ini_set('session.cache_limiter', 'nocache');
+session_start();
 
 // Make sure session canary is set.
 if (!isset($_SESSION['canary'])) {

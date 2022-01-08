@@ -1,6 +1,4 @@
 <?php
-namespace App\Controller;
-
 /**
  * Handles pages with static content.
  *
@@ -9,22 +7,28 @@ namespace App\Controller;
  * @license https://opensource.org/licenses/MIT MIT
  */
 
-use \Psr\Http\Message\ResponseInterface as Response;
-use \Psr\Http\Message\ServerRequestInterface as Request;
+declare(strict_types=1);
+
+namespace App\Controller;
+
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 class PageController extends Controller
 {
     /**
      * Route that handles the homepage
      */
-    public function index(Request $request, Response $response, array $args) {
+    public function index(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    {
         return $this->theme->render($response, 'index');
     }
 
     /**
      * Route that handles the about page
      */
-    public function about(Request $request, Response $response, array $args) {
+    public function about(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    {
         $this->setTitle('About');
         return $this->theme->render($response, 'about');
     }
@@ -32,9 +36,19 @@ class PageController extends Controller
     /**
      * Route that handles the documentation page
      */
-    public function documentation(Request $request, Response $response, array $args) {
+    public function documentation(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    {
         $this->setTitle('Documentation');
         return $this->theme->render($response, 'documentation');
+    }
+
+    /**
+     * Route that handles the updates page
+     */
+    public function updates(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    {
+        $this->setTitle('Updates');
+        return $this->theme->render($response, 'updates');
     }
 }
 

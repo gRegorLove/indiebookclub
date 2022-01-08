@@ -1,16 +1,16 @@
 
-	<?php $this->import('partials/header'); ?>
+    <?php $this->import('partials/header'); ?>
 
-	<div class="content h-entry">
+    <div class="content h-entry">
 
-		<h2 class="p-name"> Documentation </h2>
+        <h2 class="p-name"> Documentation </h2>
 
-		<div class="e-content">
-			<h3 id="micropub"> Micropub Requests </h3>
-			<p> The <a href="https://www.w3.org/TR/micropub/#json-syntax">Micropub JSON syntax</a> is used when indiebookclub posts to your endpoint. </p>
+        <div class="e-content">
+            <h3 id="micropub"> Micropub Requests </h3>
+            <p> The <a href="https://www.w3.org/TR/micropub/#json-syntax">Micropub JSON syntax</a> is used when indiebookclub posts to your endpoint. </p>
 
-			<p> Example: </p>
-			<pre>{
+            <p> Example: </p>
+            <pre>{
   "type": ["h-entry"],
   "properties": {
     "summary": ["Want to read: <b>Title</b> by <b>Author</b>, ISBN: <b>ISBN</b>"],
@@ -24,13 +24,15 @@
           "uid": ["isbn:<b>ISBN</b>"]
         }
       }
-    ]
+    ],
+    "visibility": ["public"]
   }
 }</pre>
 
-			<p> <code>read-status</code> will be “to-read”, “reading”, or “finished” based on your selection. </p>
-			<p> <code>uid</code> will have a scheme of either <code>isbn:</code> or <code>doi:</code> based on your selection </p>
-			<p> <code>author</code> and <code>uid</code> properties will only be included if you enter those fields. </p>
+            <p> <code>read-status</code> will be “to-read”, “reading”, or “finished” based on your selection. </p>
+            <p> <code>uid</code> will have a scheme of either <code>isbn:</code> or <code>doi:</code> based on your selection </p>
+            <p> <code>author</code> and <code>uid</code> properties will only be included if you enter those fields. </p>
+            <p> <code>visibility</code> will be “public”, “private”, or “unlisted” based on your selection. The private and unlisted options are only available if your Micropub endpoint indicates it supports them. </p>
 
       <h3 id="query"> Query Parameters </h3>
       <p> The <a href="<?=$utils->router->pathFor('new');?>">new post</a> form accepts URL query parameters to pre-populate fields. This can be used with bookmarklets to make adding new posts easier. </p>
@@ -48,10 +50,10 @@
       <p> <b>Consuming read posts</b> </p>
       <p> You can provide a URL in the <code>read-of</code> parameter. If indiebookclub finds a <code>read-of</code> microformat at that URL, it will pre-populate the form with that information. If no <code>read-of</code> property is found, it will check for an <code>h-cite</code> microformat. </p>
       <p> Note that if the <code>read-of</code> query parameter is provided, it takes precedence over the other parameters listed above. </p>
-		</div>
+        </div>
 
     <h3 id="export"> Export Posts </h3>
     <p> The <a href="<?=$utils->router->pathFor('settings');?>">Settings</a> page has a button to download an HTML+<a href="http://microformats.org">microformats</a> export of your posts. </p>
 
-	</div>
+    </div>
 
