@@ -240,7 +240,7 @@ class Utils
      */
     public function tz_seconds_to_offset($seconds)
     {
-        return ($seconds < 0 ? '-' : '+') . sprintf('%02d:%02d', abs($seconds/60/60), ($seconds/60)%60);
+        return ($seconds < 0 ? '-' : '+') . sprintf('%02d%02d', abs($seconds/60/60), ($seconds/60)%60);
     }
 
     /**
@@ -256,6 +256,13 @@ class Utils
         }
 
         return 0;
+    }
+
+    public function get_datetime_with_offset(string $date, string $offset): string
+    {
+        $dt = new Datetime($date);
+        $seconds = $this->tz_offset_to_seconds($offset);
+        return $dt->format('Y-m-d H:i:s') . $this->tz_seconds_to_offset($seconds);
     }
 
     /**

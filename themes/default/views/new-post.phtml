@@ -86,8 +86,9 @@ $checked_isbn = (!$checked_doi || $read_isbn) ? ' checked' : '';
         </p>
 
         <p>
-            <label for="i_published">Published:</label> (under development, no touchy)
-            <input type="text" name="published" id="i_published" placeholder="YYYY-MM-DD HH:II:SS" class="util-full-width" disabled>
+            <label for="i_published">Published Date and Time:</label>
+            <span class="help-block">Leave blank to use current time</span>
+            <input type="datetime-local" name="published" id="i_published" class="util-full-width">
         </p>
 
         <p>

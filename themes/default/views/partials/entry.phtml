@@ -69,7 +69,7 @@ $entry_url = $utils->get_entry_url($entry, $profile);
             <?=$utils->get_read_status_microformat($entry->read_status);?>: <span class="p-read-of h-cite"><cite class="p-name"><?=htmlspecialchars($entry->title);?></cite><?=$authors;?><?=$uid;?></span>
         </div>
         <div class="date">
-            <a href="<?= $entry_url; ?>" class="<?= $utils->get_url_microformats($entry); ?>"><time class="dt-published" datetime="<?= $entry_date->format('Y-m-d H:i:sP') ?>"><?= $entry_date->format('F j, Y g:ia P') ?></time></a>
+            <a href="<?= $entry_url; ?>" class="<?= $utils->get_url_microformats($entry); ?>"><time class="dt-published" datetime="<?= $entry_date->format('Y-m-d H:i:sO') ?>"><?= $entry_date->format('F j, Y g:ia O') ?></time></a>
         </div>
         <?=$display_tags;?>
         <?=$display_visibility;?>

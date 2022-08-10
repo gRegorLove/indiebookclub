@@ -317,6 +317,7 @@ class IbcController extends Controller
                 'isbn',
                 'tags',
                 'visibility',
+                'published',
                 'tzoffset',
             ], 0);
         }
@@ -347,6 +348,19 @@ class IbcController extends Controller
 
         if ($data['isbn'] && Isbn::to13($data['isbn'], true) === false) {
             $errors[] = 'The <i>ISBN</i> entered appears to be invalid';
+        }
+
+        if ($data['published']) {
+            try {
+                $dt = new DateTime($data['published']);
+                $temp_errors = DateTime::getLastErrors();
+
+                if (!empty($temp_errors['warning_count'])) {
+                    throw new Exception();
+                }
+            } catch (Exception $e) {
+                $errors[] = 'The <i>Published</i> datetime appears to be invalid';
+            }
         }
 
         return $errors;
@@ -403,14 +417,17 @@ class IbcController extends Controller
 
     /**
      * Add read post to database
-     * @param array $data
      * @return ORM|bool
      */
-    protected function add_entry($data)
+    protected function add_entry(array $data)
     {
         try {
-            $entry = ORM::for_table('entries')->create();
             $published = new DateTime();
+            if (array_key_exists('published', $data) && $data['published']) {
+                $published = new DateTime($data['published']);
+            }
+
+            $entry = ORM::for_table('entries')->create();
             $entry->isbn = ($data['isbn']) ? $data['isbn'] : '';
             $entry->doi = $data['doi'];
             $entry->user_id = $data['user_id'];
@@ -573,10 +590,8 @@ class IbcController extends Controller
 
     /**
      * Build Micropub request from the submitted form
-     * @param array $data
-     * @return array
      */
-    protected function build_micropub_request($data)
+    protected function build_micropub_request(array $data): array
     {
         $summary = sprintf('%s: %s',
             $this->utils->get_read_status_for_humans($data['read_status']),
@@ -614,6 +629,12 @@ class IbcController extends Controller
             'read-of' => [$cite],
             'visibility' => [$data['visibility']],
         ];
+
+        if (array_key_exists('published', $data) && $data['published']) {
+            $properties['published'] = [
+                $this->utils->get_datetime_with_offset($data['published'], $data['tzoffset']),
+            ];
+        }
 
         if ($data['tags']) {
             $properties['category'] = $this->utils->get_category_array($data['tags']);
