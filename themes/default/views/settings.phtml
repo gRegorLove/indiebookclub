@@ -9,6 +9,8 @@
     if (array_key_exists('updated', $_GET)) {
         echo sprintf('<p class="alert alert-success"> Settings updated </p>');
     }
+
+    $this->import('partials/display-errors', compact('errors'));
 ?>
 
     <div class="mb-1">

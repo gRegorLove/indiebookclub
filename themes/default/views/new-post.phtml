@@ -5,17 +5,7 @@
     <h2> New Post </h2>
 
 <?php
-if ($errors) {
-    $word_errors = (count($errors) == 1) ? 'error' : 'errors';
-    echo '<div class="attention">';
-    echo sprintf('<p> Please fix the following %s and re-submit the form: </p>', $word_errors);
-    echo '<ul>';
-    foreach ($errors as $error) {
-        echo sprintf('<li> %s </li>', $error);
-    }
-    echo '</ul>';
-    echo '</div>';
-}
+$this->import('partials/display-errors', compact('errors'));
 
 $options_read_status = [
     'to-read' => 'Want to read',
@@ -96,7 +86,13 @@ $checked_isbn = (!$checked_doi || $read_isbn) ? ' checked' : '';
         </p>
 
         <p>
-            <details> <summary>Advanced</summary>
+            <label for="i_published">Published:</label> (under development, no touchy)
+            <input type="text" name="published" id="i_published" placeholder="YYYY-MM-DD HH:II:SS" class="util-full-width" disabled>
+        </p>
+
+        <p>
+            <details>
+                <summary>Advanced</summary>
                 <label for="i_tzoffset">Your UTC timezone offset:</label>
                 <input type="text" name="tzoffset" id="i_tzoffset" size="10" value="">
             </details>

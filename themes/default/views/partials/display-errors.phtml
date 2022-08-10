@@ -1,0 +1,14 @@
+<?php
+
+if (isset($errors) && count($errors) > 0) {
+    $word_errors = (count($errors) == 1) ? 'error' : 'errors';
+    echo PHP_EOL . '<div class="attention">';
+    echo PHP_EOL . sprintf('<p> Please fix the following %s and re-submit the form: </p>', $word_errors);
+    echo PHP_EOL . '<ul>';
+    foreach ($errors as $error) {
+        echo PHP_EOL . sprintf('<li> %s </li>', $error);
+    }
+    echo PHP_EOL . '</ul>';
+    echo PHP_EOL . '</div>';
+}
+
