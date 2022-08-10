@@ -18,7 +18,7 @@
 <?php else: ?>
 
         <form action="<?=$utils->router->pathFor('auth_start');?>" method="get" class="sign-in">
-            <input type="text" name="me" placeholder="https://example.com" required>
+            <input type="text" name="me" placeholder="https://example.com" autocapitalize="off" required>
             <input type="submit" value="Sign In">
         </form>
 
