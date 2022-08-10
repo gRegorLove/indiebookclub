@@ -17,6 +17,14 @@
         You are signed in as <b><?=$user->url;?></b>. <a href="<?=$utils->router->pathFor('signout');?>">Sign Out?</a> <span class="help-block">indiebookclub v<?=$version;?></span>
     </div>
 
+    <div class="mb-1">
+        <b>Account</b><br>
+<?php if ($utils->session('display_photo')): ?>
+    <img src="<?=$utils->session('display_photo')?>" alt="" style="height: 1em;"> <?=$utils->session('display_name')?>
+<?php endif; ?>
+        <span class="help-block">Name and photo come from your site's IndieAuth response or the <a href="https://microformats.org/wiki/representative-h-card-authoring" target="_blank" rel="noopener">representative h-card</a></span>
+    </div>
+
 <?php if ($user->micropub_endpoint): ?>
 
     <h3> Micropub </h3>

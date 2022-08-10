@@ -8,7 +8,7 @@
     <div class="user-bar" style="text-align: right;">
 
 <?php if ($utils->session('me')): ?>
-    Signed in as <b><?=$utils->hostname($utils->session('me'));?></b> <a href="<?=$utils->router->pathFor('profile', ['domain' => $utils->hostname($utils->session('me'))]);?>">My Profile</a> • <a href="<?=$utils->router->pathFor('signout');?>">Sign Out</a>
+    Signed in as <?php if ($utils->session('display_photo')): ?> <img src="<?=$utils->session('display_photo')?>" alt="profile photo for" style="height: 1em;"> <?php endif; ?> <b><?=$utils->session('display_name');?></b> • <a href="<?=$utils->router->pathFor('profile', ['domain' => $utils->hostname($utils->session('me'))]);?>">My Profile</a> • <a href="<?=$utils->router->pathFor('signout');?>">Sign Out</a>
 <?php else: ?>
     <a href="/">Sign In</a>
 <?php endif; ?>

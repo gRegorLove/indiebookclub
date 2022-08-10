@@ -344,7 +344,43 @@ class Utils
         return '';
     }
 
-    public function setUserData(?ORM $user = null, array $h_card = []): ?ORM
+    /**
+     * Attempt to get the user's profile from the IndieAuth response
+     */
+    public function getProfileFromIndieAuth(array $indieauth_response): array
+    {
+        $profile = array_fill_keys(['name', 'photo'], '');
+
+        if (array_key_exists('profile', $indieauth_response)) {
+            $name = $indieauth_response['profile']['name'] ?? null;
+            $photo = $indieauth_response['profile']['photo'] ?? null;
+
+            if ($name) {
+                $profile['name'] = $name;
+            }
+
+            if ($photo) {
+                $profile['photo'] = $photo;
+            }
+        }
+
+        return $profile;
+    }
+
+    public function getProfileFromHCard(array $profile, array $h_card): array
+    {
+        if (!$profile['name'] && Mf2helper\hasProp($h_card, 'name')) {
+            $profile['name'] = Mf2helper\getPlaintext($h_card, 'name');
+        }
+
+        if (!$profile['photo'] && Mf2helper\hasProp($h_card, 'photo')) {
+            $profile['photo'] = Mf2helper\getPlaintext($h_card, 'photo');
+        }
+
+        return $profile;
+    }
+
+    public function setUserData(array $profile, ?ORM $user = null): ?ORM
     {
         $authorization_endpoint = $this->session('authorization_endpoint');
         $token_endpoint = $this->session('token_endpoint');
@@ -352,6 +388,7 @@ class Utils
 
         if (!$user) {
             $user = ORM::for_table('users')->create();
+            $user->set_expr('date_created', 'NOW()');
         }
 
         $user->type = $micropub_endpoint ? 'micropub' : 'local';
@@ -368,19 +405,15 @@ class Utils
             $user->micropub_endpoint = $micropub_endpoint;
         }
 
-        if ($h_card) {
-            if (Mf2helper\hasProp($h_card, 'name')) {
-                $user->name = Mf2helper\getPlaintext($h_card, 'name');
-            }
-
-            if (Mf2helper\hasProp($h_card, 'photo')) {
-                $user->photo_url = Mf2helper\getPlaintext($h_card, 'photo');
-            }
+        if ($profile['name']) {
+            $user->name = $profile['name'];
         }
 
-        $user->set_expr('date_created', 'NOW()');
-        $user->set_expr('last_login', 'NOW()');
+        if ($profile['photo']) {
+            $user->photo_url = $profile['photo'];
+        }
 
+        $user->set_expr('last_login', 'NOW()');
         return $user;
     }
 

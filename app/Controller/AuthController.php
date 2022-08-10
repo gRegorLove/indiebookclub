@@ -72,7 +72,7 @@ class AuthController extends Controller
         #$is_micropub_user = false;
 
         if ($is_micropub_user) {
-            list($authorization_url, $error) = Client::begin($me, 'create');
+            list($authorization_url, $error) = Client::begin($me, 'create profile');
         } else {
             if (!$authorization_endpoint) {
                 $authorization_endpoint = 'https://indielogin.com/auth';
@@ -133,11 +133,18 @@ class AuthController extends Controller
         $me = $indieauth_response['me'];
         $user = $this->get_user_by_slug($this->utils->hostname($me));
 
-        $h_card = Client::representativeHCard($me);
-        if (!$h_card) {
-            $h_card = [];
+        # get the profile name and photo, preferably from the IndieAuth profile response
+        $profile = $this->utils->getProfileFromIndieAuth($indieauth_response['response']);
+
+        if (!($profile['name'] && $profile['photo'])) {
+            # fallback to the representative h-card for missing fields
+            if ($h_card = Client::representativeHCard($me)) {
+                $profile = $this->utils->getProfileFromHCard($profile, $h_card);
+            }
         }
-        $user = $this->utils->setUserData($user, $h_card);
+
+        # prepare the ORM record with latest info
+        $user = $this->utils->setUserData($profile, $user);
 
         if ($user->id) {
             $user = $this->updateUser($user, $indieauth_response);
@@ -163,6 +170,13 @@ class AuthController extends Controller
 
         $_SESSION['me'] = $me;
         $_SESSION['user_id'] = $user->id();
+        $_SESSION['display_name'] = ($user->name)
+            ? $user->name
+            : $this->utils->hostname($me);
+        $_SESSION['display_photo'] = ($user->photo_url)
+            ? $user->photo_url
+            : '';
+
         unset($_SESSION['authorization_endpoint']);
         unset($_SESSION['token_endpoint']);
 
