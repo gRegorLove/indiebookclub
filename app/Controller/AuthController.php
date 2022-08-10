@@ -62,6 +62,7 @@ class AuthController extends Controller
         // The redirect URL is where the user will be returned to after they approve the request.
         Client::$redirectURL = $this->utils->getRedirectURL();
 
+        $metadata_endpoint = Client::discoverMetadataEndpoint($me);
         $authorization_endpoint = Client::discoverAuthorizationEndpoint($me);
         $token_endpoint = Client::discoverTokenEndpoint($me);
         $micropub_endpoint = Client::discoverMicropubEndpoint($me);
@@ -103,6 +104,7 @@ class AuthController extends Controller
                 'me',
                 'is_micropub_user',
                 'token_endpoint',
+                'metadata_endpoint',
                 'micropub_endpoint',
                 'authorization_endpoint',
                 'authorization_url'

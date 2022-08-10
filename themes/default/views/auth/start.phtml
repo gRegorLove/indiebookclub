@@ -22,12 +22,13 @@
 
     <details class="callout">
         <summary>Debugging Information:</summary>
-        <div>
-            indiebookclub found the following endpoints on your site:<br>
-            authorization endpoint: <code><?= $authorization_endpoint ?: 'none' ?></code><br>
-            token endpoint: <code><?= $token_endpoint ?: 'none' ?></code><br>
-            Micropub endpoint: <code><?= $micropub_endpoint ?: 'none' ?></code>
-        </div>
+        <p> indiebookclub found the following endpoints on your site: </p>
+        <ul>
+            <li> IndieAuth metadata endpoint: <code><?= $metadata_endpoint ?: 'none' ?></code> </li>
+            <li> Authorization endpoint: <code><?= $authorization_endpoint ?: 'none' ?></code> </li>
+            <li> Token endpoint: <code><?= $token_endpoint ?: 'none' ?></code> </li>
+            <li> Micropub endpoint: <code><?= $micropub_endpoint ?: 'none' ?></code> </li>
+        </ul>
     </details>
 
 </div>
