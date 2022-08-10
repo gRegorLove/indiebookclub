@@ -160,18 +160,21 @@ class UsersController extends Controller
      */
     public function settings(ServerRequestInterface $request, ResponseInterface $response, array $args)
     {
+        $errors = [];
         $user = $this->get_user();
         $options_visibility = $this->utils->get_visibility_options($user);
+        $version = $this->settings['version'];
 
         $this->setTitle('Settings');
         return $this->theme->render(
             $response,
             'settings',
-            [
-                'user' => $user,
-                'options_visibility' => $options_visibility,
-                'version' => $this->settings['version'],
-            ]
+            compact(
+                'errors',
+                'user',
+                'options_visibility',
+                'version'
+            )
         );
     }
 
@@ -193,12 +196,20 @@ class UsersController extends Controller
             $this->update_settings($data);
             return $response->withRedirect($this->router->pathFor('settings', [], ['updated' => 1]), 302);
         }
-        echo '<pre>', print_r($errors); exit;
+
+        $user = $this->get_user();
+        $options_visibility = $this->utils->get_visibility_options($user);
+        $version = $this->settings['version'];
 
         return $this->theme->render(
             $response,
             'settings',
-            compact('errors')
+            compact(
+                'errors',
+                'user',
+                'options_visibility',
+                'version',
+            )
         );
     }
 
