@@ -30,7 +30,12 @@ try {
 define('APP_DIR', dirname(__DIR__));
 date_default_timezone_set('UTC');
 
-ini_set('session.name', 'indiebookclub');
+$session_name = 'indiebookclub';
+$app_env = $_ENV['APP_ENV'] ?? 'dev';
+if ($app_env !== 'production') {
+    $session_name = $app_env . '_' . $session_name;
+}
+ini_set('session.name', $session_name);
 ini_set('session.auto_start', '0');
 ini_set('session.use_trans_sid', '0');
 ini_set('session.cookie_domain', getenv('IBC_HOSTNAME'));
