@@ -1,13 +1,16 @@
 {
   "require": {
     "slim/slim": "^3.0",
+    "slim/twig-view": "^2.5",
     "j4mie/idiorm": "^1.5",
-    "mf2/mf2": "0.4.*",
+    "mf2/mf2": "^0.5",
     "barnabywalters/mf-cleaner": "^0.1.4",
-    "indieauth/client": "^1.0",
+    "indieauth/client": ">=0.2.0",
     "coreorm/slim3-view": "^1.1",
-    "vlucas/phpdotenv": "^2.5",
-    "monolog/monolog": "^1.23"
+    "vlucas/phpdotenv": "^5.5",
+    "monolog/monolog": "^1.23",
+    "phpmailer/phpmailer": "^6.6",
+    "phpunit/phpunit": "^8.4"
   },
   "autoload": {
     "psr-4": {
