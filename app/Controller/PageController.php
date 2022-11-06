@@ -11,8 +11,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\{
+    ResponseInterface,
+    ServerRequestInterface
+};
 
 class PageController extends Controller
 {
@@ -21,7 +23,7 @@ class PageController extends Controller
      */
     public function index(ServerRequestInterface $request, ResponseInterface $response, array $args)
     {
-        return $this->theme->render($response, 'index');
+        return $this->view->render($response, 'pages/home.twig');
     }
 
     /**
@@ -29,8 +31,7 @@ class PageController extends Controller
      */
     public function about(ServerRequestInterface $request, ResponseInterface $response, array $args)
     {
-        $this->setTitle('About');
-        return $this->theme->render($response, 'about');
+        return $this->view->render($response, 'pages/about.twig');
     }
 
     /**
@@ -38,8 +39,7 @@ class PageController extends Controller
      */
     public function documentation(ServerRequestInterface $request, ResponseInterface $response, array $args)
     {
-        $this->setTitle('Documentation');
-        return $this->theme->render($response, 'documentation');
+        return $this->view->render($response, 'pages/documentation.twig');
     }
 
     /**
@@ -47,8 +47,7 @@ class PageController extends Controller
      */
     public function updates(ServerRequestInterface $request, ResponseInterface $response, array $args)
     {
-        $this->setTitle('Updates');
-        return $this->theme->render($response, 'updates');
+        return $this->view->render($response, 'pages/updates.twig');
     }
 }
 

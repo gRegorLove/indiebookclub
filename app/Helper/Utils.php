@@ -21,7 +21,7 @@ use BarnabyWalters\Mf2 as Mf2helper;
 use DateTime;
 use DateInterval;
 use Mf2;
-use ORM;
+use PHPMailer\PHPMailer\PHPMailer;
 
 class Utils
 {
@@ -55,33 +55,9 @@ class Utils
     }
 
     /**
-     * @author Aaron Parecki, https://aaronparecki.com
-     * @copyright 2014 Aaron Parecki
-     * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
-     */
-    public function hasProperty($input, $property, $default=null)
-    {
-        if (is_array($property)) {
-            $result = true;
-            foreach ($property as $key) {
-                $result = $result && array_key_exists($key, $input);
-            }
-            return $result;
-        } else {
-            if (is_array($input) && array_key_exists($property, $input) && $input[$property]) {
-                return $input[$property];
-            } elseif (is_object($input) && property_exists($input, $property) && $input->$property) {
-                return $input->$property;
-            }
-            return $default;
-        }
-    }
-
-    /**
      * Sanitize a value for display in HTML
-     * @param string $value
      */
-    public function sanitize($value)
+    public function sanitize(?string $value = null): string
     {
         if (!$value) {
             return '';
@@ -105,73 +81,42 @@ class Utils
     }
 
     /**
-     * Add `selected` to select form options
-     * @param string $field
-     * @param string $value
-     * @param bool $output = true, echo the value; false, return the value
-     */
-    public function markSelected($field, $value, $output = true)
-    {
-        $return_value = ' selected';
-
-        if ((is_array($field) && in_array($value, $field) ) || ($field == $value)) {
-            if ($output) {
-                echo $return_value;
-            } else {
-                return $return_value;
-            }
-        }
-    }
-
-    /**
-     * Add `checked` to radio/checkbox form fields
-     * @param string $field
-     * @param string $value
-     * @param bool $output = true, echo the value; false, return the value
-     */
-    public function markChecked($field, $value, $output = true)
-    {
-        $return_value = ' checked';
-
-        if ((is_array($field) && in_array($value, $field) ) || ($field == $value)) {
-            if ($output) {
-                echo $return_value;
-            } else {
-                return $return_value;
-            }
-        }
-    }
-
-    /**
      * Get the redirect URL for authorization callback
      */
-    public function getRedirectURL()
+    public function getRedirectURL(): string
     {
-        return getenv('IBC_BASE_URL') . $this->router->pathFor('auth_callback');
+        return $_ENV['IBC_BASE_URL'] . $this->router->pathFor('auth_callback');
     }
 
     /**
      * Get the client ID
      */
-    public function getClientID()
+    public function getClientID(): string
     {
-        return trim(getenv('IBC_BASE_URL'), '/');
+        return trim($_ENV['IBC_BASE_URL'], '/');
     }
 
     /**
      * Get the hostname from a URL
-     * @param string $url
      */
-    public function hostname($url)
+    public function hostname(string $url): string
     {
         return preg_replace('#^www\.(.+\.)#i', '$1', strtolower(parse_url($url, PHP_URL_HOST)));
     }
 
+    public function get_read_status_options(): array
+    {
+        return [
+            'to-read' => 'Want to read',
+            'reading' => 'Currently reading',
+            'finished' => 'Finished reading',
+        ];
+    }
+
     /**
      * Get a human-friendly read status
-     * @param string $read_status
      */
-    public function get_read_status_for_humans($read_status)
+    public function get_read_status_for_humans(string $read_status): string
     {
         switch ($read_status) {
             case 'finished':
@@ -192,26 +137,6 @@ class Utils
     }
 
     /**
-     * Get the microformat read-status property
-     * @param string $read_status
-     */
-    public function get_read_status_microformat($read_status)
-    {
-        return sprintf('<data class="p-read-status" value="%s">%s</data>',
-            $read_status,
-            $this->get_read_status_for_humans($read_status)
-        );
-    }
-
-    /**
-     * Get the microformat classes for the URL
-     */
-    public function get_url_microformats($entry)
-    {
-        return ($entry->canonical_url) ? 'u-url u-uid' : 'u-url';
-    }
-
-    /**
      * Normalize a string of text with provided separator
      *
      * Removes extra whitespace between parts of the input string.
@@ -226,105 +151,45 @@ class Utils
 
     /**
      * Convert a comma-separated string of categories to an array
-     * @param string $category
      */
-    public function get_category_array($category)
+    public function get_category_array(string $category): array
     {
         return explode(',', $this->normalizeSeparatedString($category));
     }
 
     /**
-     * @author Aaron Parecki, https://aaronparecki.com
-     * @copyright 2014 Aaron Parecki
-     * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
+     * Get list of visibility options
+     *
+     * This depends on what the Micropub endpoint indicates
+     * it supports.
      */
-    public function tz_seconds_to_offset($seconds)
+    public function get_visibility_options(array $user): array
     {
-        return ($seconds < 0 ? '-' : '+') . sprintf('%02d%02d', abs($seconds/60/60), ($seconds/60)%60);
-    }
-
-    /**
-     * @author Aaron Parecki, https://aaronparecki.com
-     * @copyright 2014 Aaron Parecki
-     * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
-     */
-    public function tz_offset_to_seconds($offset)
-    {
-        if (preg_match('/([+-])(\d{2}):?(\d{2})/', $offset, $match)) {
-            $sign = ($match[1] == '-' ? -1 : 1);
-            return (($match[2] * 60 * 60) + ($match[3] * 60)) * $sign;
-        }
-
-        return 0;
-    }
-
-    public function get_datetime_with_offset(string $date, string $offset): string
-    {
-        $dt = new Datetime($date);
-        $seconds = $this->tz_offset_to_seconds($offset);
-        return $dt->format('Y-m-d H:i:s') . $this->tz_seconds_to_offset($seconds);
-    }
-
-    /**
-     * @author Aaron Parecki, https://aaronparecki.com
-     * @copyright 2014 Aaron Parecki
-     * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
-     */
-    public function get_entry_date($entry)
-    {
-        $date = new DateTime($entry->published);
-
-        if ($entry->tz_offset > 0) {
-            $date->add(new DateInterval('PT' . $entry->tz_offset . 'S'));
-        } elseif ($entry->tz_offset < 0) {
-            $date->sub(new DateInterval('PT' . abs($entry->tz_offset) . 'S'));
-        }
-
-        $tz = $this->tz_seconds_to_offset($entry->tz_offset);
-        return new DateTime($date->format('Y-m-d H:i:s') . $tz);
-    }
-
-    /**
-     * @author Aaron Parecki, https://aaronparecki.com
-     * @copyright 2014 Aaron Parecki
-     * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
-     */
-    public function get_entry_url($entry, $user)
-    {
-        if ($entry->canonical_url) {
-            return $entry->canonical_url;
-        } elseif ($user) {
-            return $this->router->pathFor('entry', ['domain' => $user->profile_slug, 'entry' => $entry->id]);
-        } else {
-            return $this->router->pathFor('entry', ['domain' => $entry->user_profile_slug, 'entry' => $entry->id]);
-        }
-
-        return '';
-    }
-
-    public function get_visibility_options($user)
-    {
-        if (!$user->supported_visibility) {
+        $supported = $user['supported_visibility'] ?? null;
+        if (!$supported) {
             return ['Public'];
         }
 
-        $supported = json_decode($user->supported_visibility);
-
+        $supported = json_decode($supported);
+        $options = [];
         foreach (['public', 'private', 'unlisted'] as $value) {
             if (in_array($value, $supported)) {
                 $options[] = ucfirst($value);
             }
         }
 
-        # IBC does not support any of the listed options
-        if (!$options) {
-            $options = ['Public'];
+        if ($options) {
+            return $options;
         }
 
-        return $options;
+        # IBC does not support any of the listed options
+        return ['Public'];
     }
 
-    public function setAccessToken(array $indieauth_response)
+    /**
+     * Set access_token in the $_SESSION
+     */
+    public function setAccessToken(array $indieauth_response): void
     {
         $access_token = $indieauth_response['response']['access_token'] ?? null;
         if ($access_token) {
@@ -367,6 +232,9 @@ class Utils
         return $profile;
     }
 
+    /**
+     * Attempt to get the user's profile from an h-card
+     */
     public function getProfileFromHCard(array $profile, array $h_card): array
     {
         if (!$profile['name'] && Mf2helper\hasProp($h_card, 'name')) {
@@ -378,43 +246,6 @@ class Utils
         }
 
         return $profile;
-    }
-
-    public function setUserData(array $profile, ?ORM $user = null): ?ORM
-    {
-        $authorization_endpoint = $this->session('authorization_endpoint');
-        $token_endpoint = $this->session('token_endpoint');
-        $micropub_endpoint = $this->session('micropub_endpoint');
-
-        if (!$user) {
-            $user = ORM::for_table('users')->create();
-            $user->set_expr('date_created', 'NOW()');
-        }
-
-        $user->type = $micropub_endpoint ? 'micropub' : 'local';
-
-        if ($authorization_endpoint) {
-            $user->authorization_endpoint = $authorization_endpoint;
-        }
-
-        if ($token_endpoint) {
-            $user->token_endpoint = $token_endpoint;
-        }
-
-        if ($micropub_endpoint) {
-            $user->micropub_endpoint = $micropub_endpoint;
-        }
-
-        if ($profile['name']) {
-            $user->name = $profile['name'];
-        }
-
-        if ($profile['photo']) {
-            $user->photo_url = $profile['photo'];
-        }
-
-        $user->set_expr('last_login', 'NOW()');
-        return $user;
     }
 
     /**
@@ -501,13 +332,15 @@ class Utils
     }
 
     /**
-     * Not used currently
      * @author Aaron Parecki, https://aaronparecki.com
      * @copyright 2014 Aaron Parecki
      * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
      */
-    public function micropub_get($endpoint, $params, $access_token)
-    {
+    public function micropub_get(
+        string $endpoint,
+        string $access_token,
+        array $params = []
+    ) {
         $endpoint = $this->build_url($endpoint, $params);
 
         $ch = curl_init();
@@ -532,32 +365,6 @@ class Utils
             'data' => $data,
             'error' => $error,
             'curlinfo' => curl_getinfo($ch)
-        ];
-    }
-
-    /**
-     * Not used currently
-     * @author Aaron Parecki, https://aaronparecki.com
-     * @copyright 2014 Aaron Parecki
-     * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
-     */
-    public function get_micropub_config($user)
-    {
-        $targets = [];
-
-        $r = micropub_get(
-            $user->micropub_endpoint,
-            ['q' => 'config'],
-            $this->getAccessToken()
-        );
-
-        if ($r['data'] && is_array($r['data']) && array_key_exists('media-endpoint', $r['data'])) {
-            $user->micropub_media_endpoint = $r['data']['media-endpoint'];
-            $user->save();
-        }
-
-        return [
-            'response' => $r
         ];
     }
 
@@ -589,25 +396,59 @@ class Utils
     }
 
     /**
+     * Revoke an access token
+     *
+     * Note: authentication is not yet supported for revocation
+     * endpoint
+     *
+     * @see https://indieauth.spec.indieweb.org/#token-revocation-request
      * @see https://github.com/aaronpk/Quill/commit/bb0752a72692d03b61f1719dca2a7cdc2b3052cc
      */
-    public function revoke_micropub_token($access_token, $token_endpoint)
-    {
+    public function send_token_revocation(
+        string $endpoint,
+        string $token
+    ) {
+        $fields = compact('token');
+
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $token_endpoint);
+        curl_setopt($ch, CURLOPT_URL, $endpoint);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
-            'action' => 'revoke',
-            'token' => $access_token,
-        ]));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
+        curl_exec($ch);
+    }
+
+    /**
+     * LEGACY
+     * Revoke an access token
+     *
+     * Earlier versions of the IndieAuth specification
+     * sent revocation requests to the token endpoint with
+     * action=revoke.
+     *
+     * Should only use this method if site specifies a token
+     * endpoint but no revocation endpoint.
+     *
+     * @see https://indieauth.spec.indieweb.org/#token-revocation-request
+     * @see https://github.com/aaronpk/Quill/commit/bb0752a72692d03b61f1719dca2a7cdc2b3052cc
+     */
+    public function send_legacy_token_revocation(
+        string $endpoint,
+        string $token
+    ) {
+        $action = 'revoke';
+        $fields = compact('action', 'token');
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $endpoint);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
         curl_exec($ch);
     }
 
     /**
      * Parse a URL for read-of microformats
-     * @param string $url
      */
-    public function parse_read_of($url)
+    public function parse_read_of(string $url): array
     {
         $result = array_fill_keys(['title', 'authors', 'uid'], '');
         $url = filter_var($url, FILTER_SANITIZE_URL);
@@ -653,6 +494,21 @@ class Utils
         }
 
         return $result;
+    }
+
+    public function notify_admin(
+        string $message,
+        string $subject = 'indiebookclub admin notification'
+    ): bool {
+        $from = 'no-reply@' . $_ENV['IBC_HOSTNAME'];
+        $mailer = new PHPMailer();
+        $mailer->CharSet = 'UTF-8';
+        $mailer->isSendmail();
+        $mailer->setFrom($from, 'indiebookclub admin');
+        $mailer->addAddress($_ENV['IBC_EMAIL']);
+        $mailer->Subject = $subject;
+        $mailer->Body = $message;
+        return $mailer->send();
     }
 }
 
