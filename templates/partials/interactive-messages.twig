@@ -1,0 +1,14 @@
+{# TODO: migrate to Aura.Session and flash messages, e.g. flash.get('errors') #}
+{# {%- set validation_errors = flash.get('validation-errors') -%} #}
+
+{% if validation_errors|length > 0 %}
+    <div class="alert alert-danger">
+        <p> <b>Please fix the following {{ (validation_errors|length == 1) ? 'error' : 'errors' }} and re-submit the form:</b> </p>
+        <ul>
+        {% for message in validation_errors %}
+            <li> {{ message|raw }} </li>
+        {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+

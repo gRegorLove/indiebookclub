@@ -1,0 +1,16 @@
+{% extends 'layouts/generic-page-layout.twig' %}
+
+{% if show_user_bar is not defined %}
+    {% set show_user_bar = true %}
+{% endif %}
+
+{% block bodyContent %}
+<main>
+{% if show_user_bar %}{% include('layouts/partials/user-bar.twig') %}{% endif %}
+
+{% block content %}
+{% endblock content %}
+
+</main>
+{% endblock bodyContent %}
+

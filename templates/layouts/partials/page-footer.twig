@@ -1,0 +1,24 @@
+
+    <footer>
+        <div class="container">
+            <nav>
+                <ul>
+                    {%- if session('me') ~%}
+                    <li><a href="{{ path_for('new') }}">New Post</a></li>
+                    {%- endif ~%}
+                    <li><a href="{{ path_for('about') }}">About</a></li>
+                    <li><a href="{{ path_for('documentation') }}">Documentation</a></li>
+                    <li><a href="{{ path_for('updates') }}">Updates</a></li>
+                    {%- if session('me') ~%}
+                    <li> <a href="{{ path_for('profile', {'domain': session('hostname')}) }}">My Profile</a></li>
+                    <li><a href="{{ path_for('settings') }}">Settings</a></li>
+                    <li><a href="{{ path_for('signout') }}">Sign Out</a></li>
+                    {%- else ~%}
+                    <li><a href="/">Sign In</a></li>
+                    {%- endif ~%}
+                </ul>
+            </nav>
+            <p> This code is <a href="https://github.com/gRegorLove/indiebookclub">open source</a>. Feel free to send a pull request or <a href="https://github.com/gRegorLove/indiebookclub/issues">file an issue</a>. </p>
+        </div>
+    </footer>
+

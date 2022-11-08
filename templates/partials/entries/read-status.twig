@@ -1,0 +1,7 @@
+{%- set status_for_humans = 'Want to read' -%}
+{%- if entry.read_status == 'finished' -%}
+    {%- set status_for_humans = 'Finished reading' -%}
+{%- elseif entry.read_status == 'finished' -%}
+    {%- set status_for_humans = 'Currently reading' -%}
+{%- endif -%}
+<data class="p-read-status" value="{{ entry.read_status }}">{{ status_for_humans }}</data>:

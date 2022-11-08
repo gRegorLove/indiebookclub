@@ -1,0 +1,93 @@
+{% extends 'layouts/default-layout.twig' %}
+
+{% set short_title = 'New Post' %}
+
+{% block content %}
+
+<h2> {{ short_title }} </h2>
+
+{% include('partials/interactive-messages.twig') %}
+
+<form method="post" action="{{ path_for('new') }}" style="margin-top: 20px;">
+    <p>
+        <label for="i_read_status">Read Status:</label>
+        <select name="read_status" id="i_read_status" class="util-full-width" xrequired>
+            {% for value,label in options_status %}
+            <option value="{{ value }}" {{ value == read_status ? 'selected' }}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </p>
+
+    <p>
+        <label for="i_title">Title:</label>
+        <input type="text" name="title" id="i_title" value="{{ read_title }}" class="util-full-width" xrequired>
+    </p>
+
+    <p>
+        <label for="i_authors">Author(s):</label> (optional)
+        <input type="text" name="authors" id="i_authors" value="{{ read_authors }}" class="util-full-width">
+    </p>
+
+    <input type="radio" name="switch-uid" id="show-isbn" {{ (read_doi is empty or read_isbn) ? 'checked' }}><label for="show-isbn" class="toggle-label">Use ISBN</label>
+    <input type="radio" name="switch-uid" id="show-doi" {{ read_doi ? 'checked' }}><label for="show-doi" class="toggle-label">Use DOI Name</label> &nbsp;
+
+    <p class="doi-fieldset">
+        <label for="i_doi">DOI Name:</label> (optional)
+        <input type="text" name="doi" id="i_doi" value="{{ read_doi }}" class="util-full-width">
+    </p>
+
+    <p class="isbn-fieldset">
+        <label for="i_isbn">ISBN:</label> (optional)
+        <span class="help-block">ISBN-13 preferred — ISBN-10 will be converted to ISBN-13.</span>
+        <input type="text" name="isbn" id="i_isbn" value="{{ read_isbn }}" class="util-full-width">
+    </p>
+
+    <p>
+        <label for="i_category">Tags:</label> (optional)
+        <span class="help-block">Separate tags with commas</span>
+        <input type="text" name="category" id="i_category" value="{{ read_tags }}" class="util-full-width">
+    </p>
+
+    <p>
+        <label for="i_visibility">Visibility:</label>
+        <select name="visibility" id="i_visibility" class="util-full-width" xrequired>
+            {% for label in options_visibility %}
+            <option value="{{ label }}" {{ label == user.default_visibility ? 'selected' }}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </p>
+
+    <p>
+        <label for="i_published">Published Date and Time:</label> (optional)
+        <span class="help-block">Leave blank to use current time</span>
+        <input type="datetime-local" name="published" id="i_published" class="util-full-width">
+    </p>
+
+    <p>
+        <details>
+            <summary>Advanced</summary>
+            <label for="i_tz_offset">Your UTC timezone offset:</label>
+            <input type="text" name="tz_offset" id="i_tz_offset" value="+0000">
+        </details>
+    </p>
+
+    <input type="submit" value="Submit">
+
+    <div id="entry-buttons"></div>
+
+    {% if user.micropub_endpoint %}
+    <div class="callout">
+
+        <p>Clicking <b>Submit</b> will post a <a href="https://indieweb.org/read" target="_blank" rel="noopener">read</a> post to your Micropub endpoint: <b>{{ user.micropub_endpoint }}</b></P>
+
+        <p>See the <a href="{{ path_for('documentation') }}#micropub">documentation</a> for more information about the request that will be sent.</p>
+
+        <p>If you are experiencing problems with posts not showing up on your site, check the <a href="{{ path_for('settings') }}">settings</a> page for more information, including the last response from your Micropub endpoint.</p>
+
+    </div>
+    {% endif %}
+
+</form>
+
+{% endblock content %}
+

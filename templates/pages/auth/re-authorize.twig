@@ -1,0 +1,27 @@
+{% extends 'layouts/default-layout.twig' %}
+
+{% set short_title = short_title|default('Additional Permission Requested') %}
+{% set message = message|default('<p> indiebookclub is requesting additional permissions. </p>') %}
+
+{% block content %}
+
+<h1> {{ short_title|raw }} </h1>
+
+{{ message|raw }}
+
+<b>Permissions that indiebookclub will request:</b>
+
+<form method="post" action="{{ path_for('auth_re_authorize') }}">
+    <div class="mb-1">
+    {% for scope in current_scopes %}
+        <input type="hidden" name="scopes[]" value="{{ scope }}">
+        ✔ {{ scope }}<br>
+    {% endfor %}
+        <label><input type="checkbox" name="scopes[]" value="delete" checked> delete</label>
+    </div>
+
+    <input type="submit" value="Authorize">
+</form>
+
+{% endblock %}
+

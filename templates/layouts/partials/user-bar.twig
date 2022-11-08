@@ -1,0 +1,9 @@
+
+    <div class="user-bar" style="text-align: right;">
+        {%- if session('me') ~%}
+            Signed in as {% if session('display_photo') %}<img src="{{ session('display_photo') }}" alt="profile photo for" style="height: 1em;">{% endif %} <b>{{ session('display_name') }}</b> • <a href="{{ path_for('profile', {'domain': session('hostname')}) }}">My Profile</a> • <a href="{{ path_for('signout') }}">Sign Out</a>
+        {%- else ~%}
+            <a href="/">Sign In</a>
+        {%- endif ~%}
+    </div>
+

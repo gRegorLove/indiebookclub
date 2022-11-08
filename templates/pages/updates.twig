@@ -1,0 +1,32 @@
+{% extends 'layouts/default-layout.twig' %}
+
+{% set short_title = 'indiebookclub updates' %}
+
+{% block content %}
+
+<div class="h-feed">
+    <h2 class="p-name"> {{ short_title }} </h2>
+    <div class="h-entry" id="post-2021-12-03">
+        <h3> Version 0.0.3 launched </h3>
+        <time datetime="2021-12-03" class="dt-published">December 3, 2021</time>
+        <div class="e-content">
+            <p> <b>Post visibility:</b> If your Micropub server supports <a href="https://indieweb.org/Micropub-extensions#Visibility">visibility options</a> (public, unlisted, or private), you can select the visibility when making a new post. You can also select a default visibility for new posts on your settings page. </p>
+
+            <p> If you make a private post, it will only appear on your profile page when you are signed in. It will not be visible by other indiebookclub users or the public. </p>
+
+            <p> If you make an unlisted post, the post will not appear on your profile page or the ISBN page. However, the permalink for the unlisted post is not protected, so if it is shared publicly, others will be able to view it. </p>
+
+            <p> <b>Delete posts:</b> You can now delete posts. If you are using Micropub, you also have the option to grant indiebookclub permission to delete the post from your site. </p>
+
+            <p> Deleting from indiebookclub is permanent; posts cannot be un-deleted. </p>
+
+            <p> <b>Layout updates:</b> After signing in, the home page and the page header indicate the domain you are signed in as. They also include a link to your profile, sign out link, and a button to create a new post. </p>
+
+            <p> <b>Updated IndieAuth:</b> The sign-in process now uses the latest <a href="https://indieauth.spec.indieweb.org/">IndieAuth specification</a> (2020-11-26), which adds PKCE support to protect against authorization code injection and CSRF attacks. </p>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+

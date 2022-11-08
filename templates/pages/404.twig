@@ -1,0 +1,13 @@
+{% extends 'layouts/default-layout.twig' %}
+
+{% set short_title = short_title|default('Page Not Found') %}
+{% set message = message|default('<p> Sorry, that page could not be found. </p>') %}
+
+{% block content %}
+
+<h1> {{ short_title }} </h1>
+
+{{ message|raw }}
+
+{% endblock %}
+
