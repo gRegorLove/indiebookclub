@@ -17,6 +17,12 @@
 
     <p> <b><a href="{{ authorization_url }}">Sign In</a></b> </p>
 
+    {% if is_micropub_user and metadata_endpoint is empty %}
+        <div class="alert alert-warning">
+            Notice: Your site does not appear to support IndieAuth Server Metadata, which is recommended by the <a href="https://indieauth.spec.indieweb.org/" target="_blank" rel="noopener">IndieAuth specification</a>. <strong>You can continue to log in and use indiebookclub normally</strong>, but you might want to update your IndieAuth software or reach out to the developer to request an update.
+        </div>
+    {% endif %}
+
     <details class="callout">
         <summary>Debugging Information:</summary>
         <p> indiebookclub found the following endpoints on your site: </p>
