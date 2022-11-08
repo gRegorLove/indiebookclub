@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2022-11-??
+### Added
+- Micropub re-try for posts that failed or were not published previously
+- "Add to my list" shortcut link on posts
+
+### Changed
+- Updated IndieAuth\Client, now supports IndieAuth Server Metadata
+- Migrated templates to Twig
+- Refactored and modernized programming
+
 ## [0.0.3] - 2021-12-03
 ### Changed
 - Updated IndieAuth\Client usage, now supports PKCE

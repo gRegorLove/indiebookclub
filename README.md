@@ -9,7 +9,8 @@ indiebookclub requires PHP, MySQL, and Composer. It is intended to be installed 
   * If you are running Apache, do this by renaming `/public/htaccess.txt` to `/.htaccess`
 * Set up MySQL tables using `/schema/schema.sql`
 * Run `composer install`
-* Rename `/.env.example` to `/.env` and fill in the hostname, base URL, and MySQL connection information
+* Rename `/.env.example` to `/.env` and fill in your email, hostname, base URL, and MySQL connection information
+  * Optionally specify the LOG_DIR if you want logs stored somewhere other than `/logs`
 
 ## Environment Variables
 In development, phpdotenv will load the `.env` file on each request to populate environment variables. In production, it is recommended to set the actual environment variables to avoid that overhead. Set the environment variable `APP_ENV=production` to prevent loading the `.env` file.
