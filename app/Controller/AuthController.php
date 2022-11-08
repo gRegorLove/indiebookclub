@@ -174,7 +174,6 @@ class AuthController extends Controller
 
         $hostname = strtolower($this->utils->hostname($me));
         $user = $this->User->findBySlug($hostname);
-        $user_id = (int) $user['id'];
 
         $user_data = [
             'name' => $profile['name'],
@@ -190,7 +189,7 @@ class AuthController extends Controller
 
         if ($user) {
             # update existing user
-            $user = $this->User->update($user_id, $user_data);
+            $user = $this->User->update((int) $user['id'], $user_data);
         } else {
             # add new user
             $user_data['url'] = $me;
@@ -198,11 +197,16 @@ class AuthController extends Controller
             $user = $this->User->add($user_data);
         }
 
+        if (!$user) {
+            $response = $response->withStatus(500);
+            return $this->view->render($response, 'pages/500.twig');
+        }
+
         $this->utils->setAccessToken($indieauth_response);
 
         $_SESSION['me'] = $me;
         $_SESSION['hostname'] = $hostname;
-        $_SESSION['user_id'] = $user_id;
+        $_SESSION['user_id'] = (int) $user['id'];
         $_SESSION['display_name'] = $user['display_name'];
         $_SESSION['display_photo'] = $user['display_photo'];
 
