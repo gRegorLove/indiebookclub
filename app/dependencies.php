@@ -84,7 +84,7 @@ $container['php_logger'] = function($c) use ($log_dir) {
 };
 
 $container['utils'] = function ($c) {
-    return new Utils($c->get('router'));
+    return new Utils();
 };
 
 # Views

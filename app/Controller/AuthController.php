@@ -30,7 +30,7 @@ class AuthController extends Controller
         Client::$clientID = sprintf('https://%s/', $_ENV['IBC_HOSTNAME']);
 
         // The redirect URL is where the user will be returned to after they approve the request.
-        Client::$redirectURL = $this->utils->getRedirectURL();
+        Client::$redirectURL = $_ENV['IBC_BASE_URL'] . $this->router->pathFor('auth_callback');
     }
 
     /**

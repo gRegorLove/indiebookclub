@@ -26,19 +26,6 @@ use PHPMailer\PHPMailer\PHPMailer;
 class Utils
 {
     /**
-     * @var $router
-     */
-    public $router;
-
-    /**
-     * @param $router
-     */
-    public function __construct($router)
-    {
-        $this->router = $router;
-    }
-
-    /**
      * Get a value from $_SESSION
      * @param string $key
      * @author Aaron Parecki, https://aaronparecki.com
@@ -78,22 +65,6 @@ class Utils
             ENT_QUOTES,
             'UTF-8'
         );
-    }
-
-    /**
-     * Get the redirect URL for authorization callback
-     */
-    public function getRedirectURL(): string
-    {
-        return $_ENV['IBC_BASE_URL'] . $this->router->pathFor('auth_callback');
-    }
-
-    /**
-     * Get the client ID
-     */
-    public function getClientID(): string
-    {
-        return trim($_ENV['IBC_BASE_URL'], '/');
     }
 
     /**
