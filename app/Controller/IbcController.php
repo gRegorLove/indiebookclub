@@ -74,7 +74,7 @@ class IbcController extends Controller
 
                 // Send to the micropub endpoint (if one is defined) and store the result.
                 if ($user['micropub_endpoint']) {
-                    $mp_request = $this->build_micropub_request($data);
+                    $mp_request = $this->build_micropub_request($entry);
 
                     $mp_response = $this->utils->micropub_post(
                         $user['micropub_endpoint'],
@@ -494,7 +494,7 @@ class IbcController extends Controller
     }
 
     /**
-     * Build Micropub request from the submitted form
+     * Build Micropub request from the entry
      */
     protected function build_micropub_request(array $data): array
     {

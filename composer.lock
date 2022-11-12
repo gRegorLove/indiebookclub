@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e10fc4043416f712d727ab262a3deed4",
+    "content-hash": "4c022e21c3b83d8f80538b72530753e7",
     "packages": [
         {
             "name": "barnabywalters/mf-cleaner",
@@ -238,31 +238,31 @@
         },
         {
             "name": "indieauth/client",
-            "version": "1.1.5",
+            "version": "1.1.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/indieweb/indieauth-client-php.git",
-                "reference": "2ebd8396913ae8c72438dc24f037c8e1717b66ed"
+                "reference": "9f3f9cc71a752c371b44d40a979504ffd7026c7d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/indieweb/indieauth-client-php/zipball/2ebd8396913ae8c72438dc24f037c8e1717b66ed",
-                "reference": "2ebd8396913ae8c72438dc24f037c8e1717b66ed",
+                "url": "https://api.github.com/repos/indieweb/indieauth-client-php/zipball/9f3f9cc71a752c371b44d40a979504ffd7026c7d",
+                "reference": "9f3f9cc71a752c371b44d40a979504ffd7026c7d",
                 "shasum": ""
             },
             "require": {
                 "indieweb/representative-h-card": "^0.1.2",
-                "mf2/mf2": ">=0.3.2",
-                "p3k/http": ">=0.1.6",
+                "mf2/mf2": "^0.5",
+                "p3k/http": "^0.1",
                 "php": ">5.6.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "4.8.*"
+                "yoast/phpunit-polyfills": "^1.0"
             },
             "type": "library",
             "autoload": {
-                "psr-0": {
-                    "IndieAuth": "src/"
+                "psr-4": {
+                    "IndieAuth\\": "src/IndieAuth/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -278,7 +278,7 @@
             "description": "IndieAuth Client Library",
             "support": {
                 "issues": "https://github.com/indieweb/indieauth-client-php/issues",
-                "source": "https://github.com/indieweb/indieauth-client-php/tree/1.1.5"
+                "source": "https://github.com/indieweb/indieauth-client-php/tree/1.1.6"
             },
             "funding": [
                 {
@@ -286,7 +286,7 @@
                     "type": "opencollective"
                 }
             ],
-            "time": "2021-01-10T00:19:07+00:00"
+            "time": "2022-11-08T21:37:04+00:00"
         },
         {
             "name": "indieweb/link-rel-parser",

@@ -72,7 +72,7 @@ class Book
 
         $data['entry_count'] = $record->entry_count + 1;
 
-        return $this->update((int) $data['id'], $data);
+        return $this->update((int) $record->id, $data);
     }
 
     public function get(int $id): ?array

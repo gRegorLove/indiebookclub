@@ -37,7 +37,7 @@
         <p> <code>visibility</code> will be “public”, “private”, or “unlisted” based on your selection. The private and unlisted options are only available if your Micropub endpoint indicates it supports them. </p>
 
         <h3 id="query"> Query Parameters </h3>
-        <p> The <a href="<?=$utils->router->pathFor('new');?>">new post</a> form accepts URL query parameters to pre-populate fields. This can be used with bookmarklets to make adding new posts easier. </p>
+        <p> The <a href="{{ path_for('new') }}">new post</a> form accepts URL query parameters to pre-populate fields. This can be used with bookmarklets to make adding new posts easier. </p>
         <p> <b>Parameters</b> </p>
         <p> Any combination of these parameters can be used. </p>
         <ul>
@@ -55,7 +55,7 @@
     </div>
 
     <h3 id="export"> Export Posts </h3>
-    <p> The <a href="<?=$utils->router->pathFor('settings');?>">Settings</a> page has a button to download an HTML+<a href="http://microformats.org">microformats</a> export of your posts. </p>
+    <p> Your <a href="{{ path_for('settings') }}">settings</a> page has a button to download an HTML+<a href="https://microformats.org/">microformats</a> export of your posts. </p>
 </div>
 
 {% endblock %}
