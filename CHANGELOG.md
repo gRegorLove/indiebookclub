@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated IndieAuth\Client, now supports IndieAuth Server Metadata
 - Migrated templates to Twig
 - Refactored and modernized programming
+- Removed jQuery https://youmightnotneedjquery.com/
 
 ## [0.0.3] - 2021-12-03
 ### Changed
