@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4c022e21c3b83d8f80538b72530753e7",
+    "content-hash": "83d435f8a7a8fdf10958b64f506e4c54",
     "packages": [
         {
             "name": "barnabywalters/mf-cleaner",
@@ -76,47 +76,6 @@
             "description": "Promoting the interoperability of container objects (DIC, SL, etc.)",
             "homepage": "https://github.com/container-interop/container-interop",
             "time": "2017-02-14T19:40:03+00:00"
-        },
-        {
-            "name": "coreorm/slim3-view",
-            "version": "v1.1.6",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/coreorm/slim3-view.git",
-                "reference": "01352c87bfd04a8d5c77889dee4555a85ca6ab8f"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/coreorm/slim3-view/zipball/01352c87bfd04a8d5c77889dee4555a85ca6ab8f",
-                "reference": "01352c87bfd04a8d5c77889dee4555a85ca6ab8f",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.6",
-                "psr/http-message": "^1.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^4.8",
-                "slim/slim": "^3.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Coreorm\\Slim3\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Bruce B Li",
-                    "email": "coreorm@gmail.com"
-                }
-            ],
-            "description": "view renderer for slim3 with very straightforward and simple (yet still customisable) theme/layout/templates structure",
-            "time": "2016-09-30T07:05:19+00:00"
         },
         {
             "name": "doctrine/instantiator",
