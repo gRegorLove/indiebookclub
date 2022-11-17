@@ -39,11 +39,20 @@ class AuthController extends Controller
     public function start(ServerRequestInterface $request, ResponseInterface $response, array $args)
     {
         // Attempt to normalize the 'me' parameter or display an error
-        $me = Client::normalizeMeURL($request->getQueryParam('me'));
+        $me = $request->getQueryParam('me', '');
+        $me = Client::normalizeMeURL(trim($me));
         if (false === $me) {
             return $this->httpErrorResponse(
                 $response,
                 'The URL you entered is not valid.'
+            );
+        }
+
+        if ($request->getQueryParam('debug-me')) {
+            return $this->httpErrorResponse(
+                $response,
+                sprintf('Normalized URL: %s', $me),
+                'Debugging'
             );
         }
 
