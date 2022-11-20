@@ -4,7 +4,7 @@
     "slim/twig-view": "^2.5",
     "j4mie/idiorm": "^1.5",
     "mf2/mf2": "^0.5",
-    "barnabywalters/mf-cleaner": "^0.1.4",
+    "barnabywalters/mf-cleaner": "^0.2",
     "indieauth/client": "^1.1",
     "vlucas/phpdotenv": "^5.5",
     "monolog/monolog": "^1.23",

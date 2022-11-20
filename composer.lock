@@ -4,25 +4,28 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "83d435f8a7a8fdf10958b64f506e4c54",
+    "content-hash": "3c1380405b90b33ae7debad996fa4b7e",
     "packages": [
         {
             "name": "barnabywalters/mf-cleaner",
-            "version": "v0.1.4",
+            "version": "v0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/barnabywalters/php-mf-cleaner.git",
-                "reference": "ef6a16628db6e8aee2b4f8bb8093d18c24b74cd4"
+                "reference": "bf86945ccb24093294bd266ee9e874917e762680"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/barnabywalters/php-mf-cleaner/zipball/ef6a16628db6e8aee2b4f8bb8093d18c24b74cd4",
-                "reference": "ef6a16628db6e8aee2b4f8bb8093d18c24b74cd4",
+                "url": "https://api.github.com/repos/barnabywalters/php-mf-cleaner/zipball/bf86945ccb24093294bd266ee9e874917e762680",
+                "reference": "bf86945ccb24093294bd266ee9e874917e762680",
                 "shasum": ""
             },
+            "require": {
+                "php": ">=7.3"
+            },
             "require-dev": {
-                "php": ">=5.3",
-                "phpunit/phpunit": "*"
+                "phpunit/phpunit": "~9",
+                "vimeo/psalm": "~4"
             },
             "suggest": {
                 "mf2/mf2": "To parse microformats2 structures from (X)HTML"
@@ -30,7 +33,7 @@
             "type": "library",
             "autoload": {
                 "files": [
-                    "src/BarnabyWalters/Mf2/Functions.php"
+                    "src/functions.php"
                 ]
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -44,7 +47,11 @@
                 }
             ],
             "description": "Cleans up microformats2 array structures",
-            "time": "2014-10-06T23:11:15+00:00"
+            "support": {
+                "issues": "https://github.com/barnabywalters/php-mf-cleaner/issues",
+                "source": "https://github.com/barnabywalters/php-mf-cleaner/tree/v0.2.0"
+            },
+            "time": "2022-11-15T20:04:09+00:00"
         },
         {
             "name": "container-interop/container-interop",
