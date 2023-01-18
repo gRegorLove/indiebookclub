@@ -1,0 +1,36 @@
+{% extends 'layouts/default-layout.twig' %}
+
+{% set short_title = 'Entries for ISBN ' ~ isbn %}
+
+{% block content %}
+
+<div class="h-feed">
+    <h2 class="p-name">{{ short_title }}</h2>
+
+    <ul class="entries">
+    {%- for entry in entries -%}
+        {% include('partials/entry.twig') %}
+    {%- endfor -%}
+    </ul>
+
+    <nav class="entries-navigation">
+        <div class="older">
+        {% if older_id %}
+            <a href="{{ path_for('isbn', {'isbn': isbn }, {'before': older_id}) }}" rel="prev">← Older</a>
+        {% endif %}
+        </div>
+
+        <div class="newer">
+        {% if before %}
+            {%- set url_newer = path_for('isbn', {'isbn': isbn}) -%}
+            {%- if newer_id -%}
+                {%- set url_newer = path_for('isbn', {'isbn': isbn}, {'before': newer_id}) -%}
+            {%- endif -%}
+            <a href="{{ url_newer }}" rel="next">Newer →</a>
+        {% endif %}
+        </div>
+    </nav>
+</div>
+
+{% endblock content %}
+

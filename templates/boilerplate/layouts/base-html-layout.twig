@@ -1,0 +1,41 @@
+{# -- Base HTML layout template that all HTML requests inherit from -- #}
+{# -- https://nystudio107.com/blog/an-effective-twig-base-templating-setup #}
+{% extends 'layouts/global-variables.twig' %}
+
+{%- block htmlPage -%}
+<!DOCTYPE html>
+{% block htmlTag %}
+<html class="no-js" lang="en">
+{% endblock htmlTag %}
+<head>
+{% include('boilerplate/partials/head-meta.twig') %}
+
+{# -- Any <meta> tags that should be included in the <head> #}
+{% block headMeta %}
+{% endblock headMeta %}
+	<title>{{ title }}</title>
+
+{# -- Any <link> tags that should be included in the <head> #}
+{% block headLinks %}
+{% endblock headLinks %}
+
+{# -- Any JavaScript that should be included before </head> -- #}
+{% block headJs %}
+{% endblock headJs %}
+</head>
+
+<body>
+{% block bodyBlock %}
+
+	{# -- Page content that should be included in the <body> -- #}
+	{% block bodyHtml %}
+	{% endblock bodyHtml %}
+
+	{# -- Any JavaScript that should be included before </body> -- #}
+	{%~ block bodyJs %}
+	{% endblock bodyJs ~%}
+{% endblock bodyBlock %}
+</body>
+</html>
+{%- endblock htmlPage -%}
+

@@ -1,0 +1,13 @@
+{% extends 'layouts/default-layout.twig' %}
+
+{% set short_title = short_title|default('Internal Server Error') %}
+{% set message = message|default('<p> Sorry, an unexpected error has occurred. </p> <p> The website administrators have been notified. </p>') %}
+
+{% block content %}
+
+<h1> {{ short_title }} </h1>
+
+{{ message|raw }}
+
+{% endblock %}
+

@@ -12,9 +12,10 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use DateTime;
-use ORM;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\{
+    ResponseInterface,
+    ServerRequestInterface
+};
 
 class UsersController extends Controller
 {
@@ -23,79 +24,35 @@ class UsersController extends Controller
      */
     public function profile(ServerRequestInterface $request, ResponseInterface $response, array $args)
     {
-        $profile = $this->get_user_by_slug($args['domain']);
-
+        $profile = $this->User->findBySlug($args['domain']);
         if (!$profile) {
             return $response->withStatus(404);
         }
 
-        $params = $request->getQueryParams();
-        $per_page = 10;
+        // $limit = 10; # default is 10
+        $user_id = (int) $profile['id'];
+        $before = (int) $request->getQueryParam('before');
+        $entries = $this->Entry->findByUser($user_id, $before);
 
-        $entries = ORM::for_table('entries')
-            ->where('user_id', $profile->id)
-            ->where_not_equal('visibility', 'unlisted');
+        $older_id = $newer_id = null;
+        if ($entries) {
+            $last_id = (int) end($entries)['id'];
+            $first_id = (int) reset($entries)['id'];
 
-        if (array_key_exists('before', $params)) {
-            $entries->where_lte('id', $params['before']);
+            $older_id = $this->Entry->getOlderId($user_id, $last_id);
+            $newer_id = $this->Entry->getNewerId($user_id, $first_id);
         }
 
-        $entries = $entries->limit($per_page)
-            ->order_by_desc('published')
-            ->find_many();
-
-        $older = $newer = false;
-
-        if (count($entries) > 1) {
-            $older = ORM::for_table('entries')
-                ->where('user_id', $profile->id)
-                ->where_lt('id', $entries[count($entries)-1]->id)
-                ->order_by_desc('published')
-                ->find_one();
-        }
-
-        // Check for 'newer' entry id.
-        if (array_key_exists('before', $params)) {
-            $newer = ORM::for_table('entries')
-                ->where('user_id', $profile->id)
-                ->where_gte('id', $entries[0]->id)
-                ->order_by_asc('published')
-                ->offset($per_page)
-                ->find_one();
-
-            if (!$newer) {
-                // No new entry was found at the specific offset, so find the newest post to link to instead
-                $newer = ORM::for_table('entries')
-                    ->where('user_id', $profile->id)
-                    ->order_by_desc('published')
-                    ->limit(1)
-                    ->find_one();
-
-                if ($newer && $newer->id == $entries[0]->id) {
-                    $newer = false;
-                }
-            }
-        }
-
-        $extra_headers = [
-            sprintf('<link rel="me" href="%s">', $profile->url),
-        ];
-        $this->theme->setData('extra_headers', $extra_headers);
-
-        $feed_name = 'Entries by ';
-        $feed_name .= ($profile->name) ? htmlspecialchars($profile->name) : htmlspecialchars($profile->url);
-
-        $this->setTitle($feed_name);
-        return $this->theme->render(
+        return $this->view->render(
             $response,
-            'entries',
-            [
-                'feed_name' => $feed_name,
-                'entries' => $entries,
-                'profile' => $profile,
-                'older' => ($older ? $older->id : false),
-                'newer' => ($newer ? $newer->id : false)
-            ]
+            'pages/profile.twig',
+            compact(
+                'profile',
+                'entries',
+                'before',
+                'older_id',
+                'newer_id'
+            )
         );
     }
 
@@ -104,54 +61,58 @@ class UsersController extends Controller
      */
     public function entry(ServerRequestInterface $request, ResponseInterface $response, array $args)
     {
-        $profile = $this->get_user_by_slug($args['domain']);
-
+        $profile = $this->User->findBySlug($args['domain']);
         if (!$profile) {
             return $response->withStatus(404);
         }
 
-        $entry = ORM::for_table('entries')
-            ->where('user_id', $profile->id)
-            ->where('id', $args['entry'])
-            ->find_one();
+        $id = (int) $args['entry'];
+        $user_id = (int) $profile['id'];
 
+        $entry = $this->Entry->getUserEntry($id, $user_id);
         if (!$entry) {
             return $response->withStatus(404);
         }
 
-        if ($entry->visibility == 'private' && $this->utils->session('user_id') !== $entry->user_id) {
+        if ($entry['visibility'] == 'private' && $this->utils->session('user_id') !== $entry['user_id']) {
             return $response->withStatus(404);
         }
 
-        $file_path = sprintf('%s/cache/%s-%d.html',
-            APP_DIR,
-            $profile->profile_slug,
-            $args['entry']
+        $can_retry = false;
+        $is_own_post = ($entry['user_id'] == $this->utils->session('user_id'));
+        $micropub_failed = (
+            ($profile['type'] == 'micropub')
+            && ($entry['micropub_success'] == 0)
+            && empty($entry['canonical_url'])
         );
 
-        if (false && file_exists($file_path)) {
-            return $this->theme->render(
-                $response,
-                'entry',
-                ['cached_entry' => file_get_contents($file_path)]
+        if ($is_own_post && $micropub_failed) {
+            $can_retry = true;
+        }
+
+        $cached_entry = null;
+        if ($entry['user_id'] != $this->utils->session('user_id')) {
+            # not the post author, check for cached entry
+            $file_path = sprintf('%s/cache/%s-%d.html',
+                APP_DIR,
+                $profile['profile_slug'],
+                $id
             );
+
+            if (file_exists($file_path)) {
+                $cached_entry = '<!-- cache -->' . PHP_EOL . file_get_contents($file_path);
+            }
         }
 
-        if ($entry->canonical_url) {
-            $extra_headers = [
-                sprintf('<link rel="canonical" href="%s">', $entry->canonical_url),
-            ];
-
-            $this->theme->setData('extra_headers', $extra_headers);
-        }
-
-        return $this->theme->render(
+        return $this->view->render(
             $response,
-            'entry',
-            [
-                'entry' => $entry,
-                'profile' => $profile
-            ]
+            'pages/entry.twig',
+            compact(
+                'profile',
+                'entry',
+                'cached_entry',
+                'can_retry'
+            )
         );
     }
 
@@ -160,18 +121,42 @@ class UsersController extends Controller
      */
     public function settings(ServerRequestInterface $request, ResponseInterface $response, array $args)
     {
-        $user = $this->get_user();
+        $validation_errors = [];
+        $user = $this->User->get($this->utils->session('user_id'));
         $options_visibility = $this->utils->get_visibility_options($user);
 
-        $this->setTitle('Settings');
-        return $this->theme->render(
+        $supported_visibility = $user['supported_visibility'] ?? null;
+        if ($supported_visibility) {
+            if ($options = json_decode($supported_visibility)) {
+                $supported_visibility = implode(', ', $options);
+            }
+        }
+
+        $access_token = $this->utils->getAccessToken();
+        $token_ending = null;
+        if ($token_length = strlen($access_token)) {
+            $token_ending = substr($access_token, -7);
+        }
+
+        $version = $this->settings['version'];
+
+        if ($this->utils->session('validation_errors')) {
+            $validation_errors = $this->utils->session('validation_errors');
+            unset($_SESSION['validation_errors']);
+        }
+
+        return $this->view->render(
             $response,
-            'settings',
-            [
-                'user' => $user,
-                'options_visibility' => $options_visibility,
-                'version' => $this->settings['version'],
-            ]
+            'pages/settings.twig',
+            compact(
+                'validation_errors',
+                'user',
+                'supported_visibility',
+                'options_visibility',
+                'token_length',
+                'token_ending',
+                'version'
+            )
         );
     }
 
@@ -184,22 +169,24 @@ class UsersController extends Controller
 
         if (!$this->validate_post_request($data)) {
             $response = $response->withStatus(400);
-            return $this->theme->render($response, '400');
+            return $this->view->render($response, 'pages/400.twig');
         }
 
         $errors = $this->validate_settings($data);
 
         if (count($errors) === 0) {
-            $this->update_settings($data);
-            return $response->withRedirect($this->router->pathFor('settings', [], ['updated' => 1]), 302);
-        }
-        echo '<pre>', print_r($errors); exit;
+            $user = $this->User->update($this->utils->session('user_id'), $data);
+            if (!$user) {
+                $response = $response->withStatus(500);
+                return $this->view->render($response, 'pages/500.twig');
+            }
 
-        return $this->theme->render(
-            $response,
-            'settings',
-            compact('errors')
-        );
+            $redirect = $this->router->pathFor('settings', [], ['updated' => 1]);
+            return $response->withRedirect($redirect, 302);
+        }
+
+        $_SESSION['validation_errors'] = $errors;
+        return $response->withRedirect($this->router->pathFor('settings'), 302);
     }
 
     /**
@@ -207,28 +194,22 @@ class UsersController extends Controller
      */
     public function export(ServerRequestInterface $request, ResponseInterface $response, array $args)
     {
-        $user = $this->get_user();
-
-        if (!$user) {
+        $profile = $this->User->get($this->utils->session('user_id'));
+        if (!$profile) {
             $response = $response->withStatus(500);
-            return $this->theme->render($response, '500');
+            return $this->view->render($response, 'pages/500.twig');
         }
 
         $is_cached = false;
-
-        $latest_entry = ORM::for_table('entries')
-            ->where('user_id', $user->id)
-            ->order_by_desc('published')
-            ->limit(1)
-            ->find_one();
+        $latest_entry = $this->Entry->getUserLatestEntry($this->utils->session('user_id'));
 
         $file_path = sprintf('%s/cache/%s-all.html',
             APP_DIR,
-            $user->profile_slug
+            $profile['profile_slug']
         );
 
         if (file_exists($file_path)) {
-            $latest = new DateTime($latest_entry->published);
+            $latest = new DateTime($latest_entry['published']);
             $cached = new DateTime('@' . filemtime($file_path));
 
             if ($cached > $latest) {
@@ -238,26 +219,25 @@ class UsersController extends Controller
             }
         }
 
+        $dt = new DateTime();
+
         if ($is_cached) {
             $src = file_get_contents($file_path);
         } else {
-            $entries = ORM::for_table('entries')
-                ->where('user_id', $user->id)
-                ->order_by_desc('published')
-                ->find_many();
+            $is_caching = true;
+            $inline_css = trim(file_get_contents(APP_DIR . '/public/css/style.css'));
+            $entries = $this->Entry->findByUserExport($this->utils->session('user_id'));
+            $export_timestamp = $dt->format('Y-m-d H:i:sO');
 
-            $feed_name = 'Entries by ';
-            $feed_name .= ($user->name) ? htmlspecialchars($user->name) : htmlspecialchars($user->url);
-
-            $src = trim($this->theme->renderView(
-                'export',
-                [
-                    'feed_name' => $feed_name,
-                    'entries' => $entries,
-                    'user' => $user,
-                    'older' => false,
-                    'newer' => false,
-                ]
+            $src = trim($this->view->fetch(
+                'pages/export.twig',
+                compact(
+                    'is_caching',
+                    'inline_css',
+                    'profile',
+                    'entries',
+                    'export_timestamp'
+                )
             ));
 
             if (file_put_contents($file_path, $src) === false) {
@@ -267,14 +247,13 @@ class UsersController extends Controller
                 );
 
                 $response = $response->withStatus(500);
-                return $this->theme->render($response, '500');
+                return $this->view->render($response, 'pages/500.twig');
             }
         }
 
-        $date = new DateTime();
         $header_disposition = sprintf('Content-Disposition: attachment; filename="indiebookclub-%s-%s.html"',
-            $user->profile_slug,
-            $date->format('Y-m-d-Hi')
+            $profile['profile_slug'],
+            $dt->format('Y-m-d-Hi')
         );
         $header_length = sprintf('Content-Length: %s', mb_strlen($src));
 
@@ -289,12 +268,7 @@ class UsersController extends Controller
         exit;
     }
 
-    /**
-     * Validate the POST request
-     * @param array $data
-     * @return bool
-     */
-    protected function validate_post_request($data)
+    private function validate_post_request(array $data): bool
     {
         $allowlist = array_fill_keys([
             'default_visibility',
@@ -307,12 +281,7 @@ class UsersController extends Controller
         return true;
     }
 
-    /**
-     * Validate settings fields
-     * @param array $data
-     * @return array
-     */
-    protected function validate_settings($data)
+    private function validate_settings(array $data): array
     {
         $errors = [];
 
@@ -323,35 +292,6 @@ class UsersController extends Controller
         }
 
         return $errors;
-    }
-
-    /**
-     * Update settings table
-     * @param int $id
-     * @return bool
-     */
-    protected function update_settings($data)
-    {
-        try {
-            $user = $this->get_user();
-
-            if (!$user) {
-                throw new Exception('Could not load user');
-            }
-
-            if (array_key_exists('default_visibility', $data)) {
-                $user->default_visibility = $data['default_visibility'];
-            }
-
-            $user->save();
-            return true;
-        } catch (PDOException $e) {
-            $this->logger->error(
-                'Error updating settings. ' . $e->getMessage(),
-                $data
-            );
-            return false;
-        }
     }
 }
 

@@ -9,10 +9,20 @@ indiebookclub requires PHP, MySQL, and Composer. It is intended to be installed 
   * If you are running Apache, do this by renaming `/public/htaccess.txt` to `/.htaccess`
 * Set up MySQL tables using `/schema/schema.sql`
 * Run `composer install`
-* Rename `/.env.example` to `/.env` and fill in the hostname, base URL, and MySQL connection information
+* Rename `/.env.example` to `/.env` and fill in your email, hostname, base URL, and MySQL connection information
+  * Optionally specify the LOG_DIR if you want logs stored somewhere other than `/logs`
 
 ## Environment Variables
-In development, phpdotenv will load the `.env` file on each request to populate environment variables. In production, it is recommended to set the actual environment variables to avoid that overhead. Set the environment variable `APP_ENV=production` to prevent loading the `.env` file.
+In development, environment variables are loaded from the `.env` file on each request. In production, it is recommended to set/cache them in the environment to avoid that overhead.
+
+To cache environment variables, run at the command line:
+`php ./deploy.php`
+
+This will cache the environment variables in the file `/app/env.php`.
+
+Once cached, if you make updates to `.env`, you will need to run this command again to update the cache. You can also delete this cache file and the application will revert to development mode, loading directly from the `.env` file on each request.
+
+Advanced: If your hosting lets you set up environment variables another way, you can look in `/app/config.php` to change the code that checks for that cached environment file.
 
 ## Maintenance Mode
 Maintenance mode displays a maintenance message in place of all pages on the app. You can specify an IP address that is able to browse the site normally.
@@ -22,7 +32,10 @@ To enable maintenance mode, update `/app/settings.php`. Set `offline` to `true` 
 ## Development Mode
 Development mode displays all error messages and restricts login to a single domain. Unlike maintenance mode, public pages remain visible and do not display a maintenance message.
 
-To enable development mode, set the environment variable `APP_ENV` to `dev` (or anything other than `production`). Then update `/app/settings.php` and set `developer_domain` to the domain you want to enable logins for.
+To enable development mode, set the environment variable `APP_ENV` to `dev` (or anything other than `production`). Then update `/app/settings.php` and update `developer_domains` with the domain(s) you want to enable logins for.
+
+# Changelog
+* [Changelog](CHANGELOG.md)
 
 # Credits
 * Inspired by and using open source code from [Aaron Parecki’s](https://aaronparecki.com) [Teacup](https://teacup.p3k.io/) and [Quill](https://quill.p3k.io/).

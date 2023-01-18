@@ -1,0 +1,20 @@
+{% extends 'layouts/default-layout.twig' %}
+
+{% block headLinks %}
+    {{ parent() }}
+    {%- if entry.canonical_url -%}
+        <link rel="canonical" href="{{ entry.canonical_url }}">
+    {%- endif -%}
+{% endblock headLinks %}
+
+{% block content %}
+
+<ul class="entries">
+{%~ if cached_entry -%}
+{{ cached_entry|raw }}
+{%- else -%}
+{% include('partials/entry.twig') %}
+{%- endif -%}
+</ul>
+
+{% endblock content %}

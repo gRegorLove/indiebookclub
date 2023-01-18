@@ -6,7 +6,7 @@ declare(strict_types=1);
 $app->add(function ($request, $response, $next) use ($container) {
     if ($this->get('settings')['offline'] && $_SERVER['REMOTE_ADDR'] != $this->settings['developer_ip']) {
         $response = $response->withStatus(503)->withHeader('Retry-After', 3600);
-        return $this->theme->render($response, 'maintenance');
+        return $this->view->render($response, 'pages/maintenance.twig');
     }
     return $next($request, $response);
 });
@@ -33,7 +33,10 @@ $app->add(function ($request, $response, $next) use ($container) {
     if (in_array($route_name, $authenticated_route_names) && !array_key_exists('user_id', $_SESSION)) {
         if ($request->isPost()) {
             $response = $response->withStatus(401);
-            return $container->theme->render($response, '401');
+            return $container->view->render($response, 'pages/400.twig', [
+                'short_title' => 'Unauthorized',
+                'message' => '<p> Please log in </p>',
+            ]);
         }
 
         return $response->withRedirect($this->router->pathFor('index'), 302);

@@ -1,0 +1,75 @@
+{%- set url_profile = path_for('profile', {'domain': entry.profile_slug}) -%}
+
+{%- set permalink = entry.canonical_url -%}
+{%- if entry.canonical_url is empty -%}
+    {%- set permalink = path_for('entry', {'domain': entry.profile_slug, 'entry': entry.id }) -%}
+{%- endif -%}
+
+{%- set url_add = path_for('new', {}, {
+    'title': entry.title,
+    'authors': entry.authors,
+    'isbn': entry.isbn,
+    'doi': entry.doi
+}) -%}
+
+{%- set is_own_post = (session('user_id') == entry.user_id) -%}
+
+{% if session('me') and can_retry %}
+<div class="alert alert-warning">
+    This post was not published to your site. This may be because your site did not support Micropub at the time, or there was an error publishing. Click this link if you would like to try again:<br><b><a href="{{ path_for('retry', {'entry_id': entry.id}) }}">Try publishing again</a></b>
+</div>
+<div class="alert alert-warning">
+    If you continue to experience problems publishing, check your <b><a href="{{ path_for('settings') }}">settings</a></b> page for more information, including the last response from your Micropub endpoint.
+</div>
+{% endif %}
+
+<li class="h-entry">
+
+    <div class="author p-author h-card">
+        <a href="{{ url_profile }}">
+            {%- if entry.profile_photo_url -%}
+                <img src="{{ entry.profile_photo_url }}" alt="photo of" class="photo u-photo">
+            {%- else -%}
+                <img src="/images/no-photo.png" alt="placeholder photo" class="photo">
+            {%- endif -%}
+        </a>
+        <div class="author-details">
+            <a class="name p-name" href="{{ url_profile }}">{{ entry.profile_name }}</a><br>
+            <a class="url u-url" href="{{ entry.profile_url }}">{{ entry.profile_slug }}</a>
+        </div>
+    </div>
+
+    <div class="content">
+
+        <div class="summary p-summary">
+            {%- include('partials/entries/read-status.twig') -%} <span class="p-read-of h-cite"><cite class="p-name">{{ entry.title }}</cite>{% if entry.authors %} by <span class="p-author">{{ entry.authors}}</span>{% endif %} {% if entry.doi %}<span class="isbn p-uid">doi:{{ entry.doi }}</span>{% elseif entry.isbn %}<span class="isbn">ISBN: <a href="{{ path_for('isbn', {'isbn': entry.isbn}) }}" class="p-uid">{{ entry.isbn }}</a></span>{% endif %}</span>
+        </div>
+        <div class="date">
+            <a href="{{ permalink }}" class="{{ (entry.canonical_url) ? 'u-url u-uid' : 'u-url' }}"><time class="dt-published" datetime="{{ get_entry_date(entry.published, entry.tz_offset)|date('Y-m-d H:i:sO', false) }}">{{ get_entry_date(entry.published, entry.tz_offset)|date('F j, Y g:ia O', false) }}</time></a>
+        </div>
+
+        {%~ if entry.category ~%}
+            {%- set tags = entry.category|split(',') -%}
+            <div class="post-meta"> Tags:
+            {%~ for tag in tags -%}
+                <span class="tag p-category">{{ tag }}</span>{% if loop.index != loop.length %}, {% endif %}
+            {%- endfor -%}
+            </div>
+        {%~ endif ~%}
+
+        {%~ if entry.visibility != 'public' ~%}
+            <div class="post-meta">Visibility: {{ entry.visibility }} {% if entry.visibility == 'private' %}🔒{% elseif entry.visibility == 'unlisted' %}👻{% endif %}</div>
+        {%~ endif ~%}
+
+        {%~ if not is_caching ~%}
+            {%- if session('me') -%}
+            <div class="post-meta mb-1"><a href="{{ url_add }}">➕ Add to my list</a></div>
+            {%- endif -%}
+
+            {%- if is_own_post -%}
+            <div class="post-meta"><a href="{{ path_for('delete', {'id': entry.id}) }}">🗑️ Delete</a></div>
+            {%- endif -%}
+        {%~ endif ~%}
+    </div>
+</li>
+

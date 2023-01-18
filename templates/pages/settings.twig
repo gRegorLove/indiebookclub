@@ -1,0 +1,98 @@
+{% extends 'layouts/default-layout.twig' %}
+
+{% set short_title = 'Settings' %}
+
+{% block content %}
+
+<h2> {{ short_title }} </h2>
+
+{% include('partials/interactive-messages.twig') %}
+
+<div class="mb-1">
+    You are signed in as <b>{{ user.url }}</b>. <a href="{{ path_for('signout') }}">Sign Out?</a> <span class="help-block">indiebookclub v{{ version }}</span>
+</div>
+
+<div class="mb-1">
+    <b>Account</b><br>
+    {% if session('display_photo') %}<img src="{{ session('display_photo') }}" alt="" style="height: 1em;">{% endif %} {{ session('display_name') }}
+
+    <span class="help-block">Name and photo come from your site's IndieAuth response or the <a href="https://microformats.org/wiki/representative-h-card-authoring" target="_blank" rel="noopener">representative h-card</a></span>
+</div>
+
+{% if user.micropub_endpoint %}
+
+<h3> Micropub </h3>
+
+<form method="post" action="{{ path_for('settings_update') }}">
+    <div class="mb-1">
+        <b><label for="i_default_visibility">Default Visibility:</label></b>
+        <span class="help-block">The new post form will default to this setting</span>
+        <fieldset class="one-line-form">
+            <select name="default_visibility" id="i_default_visibility" required>
+                {% for label in options_visibility %}
+                <option value="{{ label|lower }}"{{ label|lower == user.default_visibility ? ' selected' }}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <input type="submit" class="btn btn-default" value="Update">
+        </fieldset>
+    </div>
+</form>
+
+<div class="mb-1">
+    <b>visibility</b><br>
+    <span class="help-block">The visibility options your site supports</span>
+    {% if supported_visibility %}
+        {{ supported_visibility }}
+    {% else %}
+        None indicated. Defaults to: public
+    {% endif %}
+</div>
+
+<div class="mb-1">
+    <b>scope</b><br>
+    <span class="help-block">Should be a space-separated list of permissions including “create” or “post”</span>
+    {{ user.token_scope }}
+</div>
+
+<div class="mb-1">
+    <b>micropub endpoint</b><br>
+    <span class="help-block">Should be a URL</span>
+    {{ user.micropub_endpoint }}
+</div>
+
+<div class="mb-1">
+    <b>access token</b><br>
+    <span class="help-block">Should be greater than length 0</span>
+    String of length <b>{{ token_length }}</b> {% if token_ending %} ending in <code>{{ token_ending }}</code>{% endif %}
+</div>
+
+{% if user.last_micropub_response %}
+<div class="mb-1">
+    <b>Last response from your Micropub endpoint</b><br>
+    <textarea readonly style="font-family: monospace; font-size: 1em; width: 100%; min-height: 240px;">{{ user.last_micropub_response }}</textarea>
+</div>
+{% endif %}
+
+<div class="mb-1">
+    <h3> Reset Login </h3>
+
+    <p> Clicking this button will tell your token endpoint to revoke the token. indiebookclub will forget the access token stored, forget all cached endpoints, and sign you out. If you sign back in, you will start over and see the authorization screen for your endpoints. </p>
+
+    <form method="get" action="{{ path_for('auth_reset') }}">
+        <input type="submit" class="btn btn-default" value="Reset Login">
+    </form>
+</div>
+
+{% endif %}
+
+<div class="mb-1">
+    <h3> Export Posts </h3>
+    <p> Click this button to download an HTML export of all your posts. </p>
+
+    <form method="get" action="{{ path_for('export') }}">
+        <input type="submit" class="btn btn-default" value="Export Posts">
+    </form>
+</div>
+
+{% endblock content %}
+

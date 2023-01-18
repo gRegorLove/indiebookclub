@@ -1,0 +1,27 @@
+{%- set short_title = 'Entries by ' ~ profile.url -%}
+{%- if profile.name -%}
+    {%- set short_title = 'Entries by ' ~ profile.name -%}
+{%- endif -%}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title><?=$feed_name;?></title>
+    <base href="{{ getenv('IBC_BASE_URL') }}">
+    <style>{{ inline_css }}</style>
+</head>
+<body>
+
+<div class="h-feed">
+    <h2 class="p-name">{{ short_title }}</h2>
+    <ul class="entries">
+    {%- for entry in entries -%}
+        {% include('partials/entry.twig') %}
+    {%- endfor -%}
+    </ul>
+</div>
+
+<p> This export was generated at {{ export_timestamp }}. </p>
+
+</body>
+</html>

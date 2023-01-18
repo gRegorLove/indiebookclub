@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2022-11-14
+### Added
+- Micropub re-try for posts that failed or were not published previously [#13](https://github.com/gRegorLove/indiebookclub/issues/13)
+- "Add to my list" shortcut link on posts [#3](https://github.com/gRegorLove/indiebookclub/issues/3)
+- Published Date and Time field to allow backdating [#12](https://github.com/gRegorLove/indiebookclub/issues/12)
+- Add profile name and photo [#19](https://github.com/gRegorLove/indiebookclub/issues/19)
+
+### Changed
+- Updated IndieAuth\Client, now supports IndieAuth Server Metadata
+- Migrated templates to Twig
+- Refactored and modernized programming
+- Removed jQuery https://youmightnotneedjquery.com/
+
 ## [0.0.3] - 2021-12-03
 ### Changed
 - Updated IndieAuth\Client usage, now supports PKCE

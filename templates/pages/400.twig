@@ -1,0 +1,13 @@
+{% extends 'layouts/default-layout.twig' %}
+
+{% set short_title = short_title|default('Invalid Request') %}
+{% set message = message|default('<p> The server was unable to process that request. Please check the syntax of your request and try again. </p>') %}
+
+{% block content %}
+
+<h1> {{ short_title|raw }} </h1>
+
+{{ message|raw }}
+
+{% endblock %}
+

@@ -1,0 +1,44 @@
+{% extends 'boilerplate/layouts/base-html-layout.twig' %}
+
+{% if show_header is not defined %}
+    {% set show_header = true %}
+{% endif %}
+
+{# -- Any additional <meta> tags that should be included in the <head> #}
+{% block headMeta %}
+{% endblock headMeta %}
+
+
+{# -- Any additional <link> tags that should be included in the <head> #}
+{% block headLinks %}
+    <link rel="icon" href="/images/book.png">
+    <link rel="apple-touch-icon-precomposed" href="/images/book.png" />
+    <link rel="stylesheet" href="https://unpkg.com/sanitize.css" />
+    <link rel="stylesheet" href="/css/style.css">
+{% endblock headLinks %}
+
+
+{# -- Any JavaScript that should be included before </head> -- #}
+{% block headJs %}
+    <script src="/js/main.js"></script>
+{% endblock headJs %}
+
+
+{# -- Page body -- #}
+{% block bodyHtml %}
+{% if show_header %}{% include('layouts/partials/page-header.twig') %}{% endif %}
+
+{% block bodyContent %}
+    <p> This is placeholder body content. </p>
+    <p> To modify this page's contents in the Twig template, use <code>block bodyContent</code> </p>
+    <p> <a href="https://twig.symfony.com/doc/3.x/templates.html#template-inheritance" target="_blank" rel="noopener noreferer">Twig documentation</a> </p>
+{% endblock bodyContent %}
+
+{% include('layouts/partials/page-footer.twig') %}
+{% endblock bodyHtml %}
+
+
+{# -- Any JavaScript that should be included before </body> -- #}
+{%~ block bodyJs %}
+{% endblock bodyJs ~%}
+

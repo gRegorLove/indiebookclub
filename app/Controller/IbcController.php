@@ -19,71 +19,91 @@ namespace App\Controller;
 
 use DateTime;
 use Exception;
-use ORM;
 use PDOException;
 use Mwhite\PhpIsbn\Isbn;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\{
+    ResponseInterface,
+    ServerRequestInterface
+};
 
 class IbcController extends Controller
 {
     /**
-     * Route that handles the new post process
+     * Handle the new post process
      */
     public function new(ServerRequestInterface $request, ResponseInterface $response, array $args)
     {
-        $user = $this->get_user();
-        $errors = [];
+        $user = $this->User->get($this->utils->session('user_id'));
+        $validation_errors = [];
 
         if ($request->isPost()) {
             $data = $request->getParsedBody();
 
             if (!$this->validate_post_request($data)) {
                 $response = $response->withStatus(400);
-                return $this->theme->render($response, '400');
+                return $this->view->render($response, 'pages/400.twig');
             }
 
-            $errors = $this->validate_new_post($data);
+            $validation_errors = $this->validate_new_post($data);
 
-            if (count($errors) === 0) {
-                $data['user_id'] = $user->id;
+            if (count($validation_errors) === 0) {
+                $data['user_id'] = $this->utils->session('user_id');
 
                 if ($data['isbn'] = Isbn::to13($data['isbn'])) {
-                    $this->add_book($data['isbn'], $user->id);
+                    $this->Book->addOrIncrement($data);
                 }
 
-                $entry = $this->add_entry($data);
+                $data['category'] = $this->utils->normalizeSeparatedString($data['category']);
+                $entry = $this->Entry->add($data);
 
-                if ($entry === false) {
+                if (!$entry) {
                     $response = $response->withStatus(500);
-                    return $this->theme->render($response, '500');
+                    return $this->view->render($response, 'pages/500.twig');
                 }
 
-                $this->cache_entry((int) $entry->id);
+                $entry_id = (int) $entry['id'];
+                $this->cache_entry($entry_id);
 
                 $url = $this->router->pathFor(
                     'entry',
                     [
-                        'domain' => $user->profile_slug,
-                        'entry' => $entry->id
+                        'domain' => $user['profile_slug'],
+                        'entry' => $entry_id,
                     ]
                 );
 
                 // Send to the micropub endpoint (if one is defined) and store the result.
-                if ($user->micropub_endpoint) {
-                    $mp_request = $this->build_micropub_request($data);
+                if ($user['micropub_endpoint']) {
+                    $mp_request = $this->build_micropub_request($entry);
 
                     $mp_response = $this->utils->micropub_post(
-                        $user->micropub_endpoint,
+                        $user['micropub_endpoint'],
                         $mp_request,
                         $this->utils->getAccessToken(),
                         true
                     );
 
-                    $this->add_micropub_response($mp_response, $user, $entry);
+                    $response_body = trim($mp_response['response']);
 
-                    if ($entry->canonical_url) {
-                        $url = $entry->canonical_url;
+                    # Update user
+                    $user = $this->User->update($this->utils->session('user_id'), [
+                        'last_micropub_response' => $response_body,
+                    ]);
+
+                    # Update entry
+                    $entry_data = [
+                        'micropub_response' => $response_body,
+                    ];
+
+                    if (isset($mp_response['headers']['Location'])) {
+                        $entry_data['canonical_url'] = reset($mp_response['headers']['Location']);
+                        $entry_data['micropub_success'] = 1;
+                    }
+
+                    $entry = $this->Entry->update($entry_id, $entry_data);
+
+                    if ($entry['canonical_url']) {
+                        $url = $entry['canonical_url'];
                     }
                 }
 
@@ -91,9 +111,10 @@ class IbcController extends Controller
             }
         }
 
+        $options_status = $this->utils->get_read_status_options();
         $options_visibility = $this->utils->get_visibility_options($user);
 
-        if ($read_status = $request->getQueryParam('read-status', null)) {
+        if ($read_status = $request->getQueryParam('read-status')) {
             $read_status = strtolower($read_status);
         }
 
@@ -101,52 +122,119 @@ class IbcController extends Controller
             $read_status = 'to-read';
         }
 
-        $read_title = $this->utils->sanitize($request->getQueryParam('title', null));
-        $read_authors = $this->utils->sanitize($request->getQueryParam('authors', null));
-        $read_isbn = $this->utils->sanitize($request->getQueryParam('isbn', null));
-        $read_doi = $this->utils->sanitize($request->getQueryParam('doi', null));
-        $read_tags = $this->utils->sanitize($request->getQueryParam('tags', null));
+        $read_title = $this->utils->sanitize($request->getQueryParam('title'));
+        $read_authors = $this->utils->sanitize($request->getQueryParam('authors'));
+        $read_isbn = $this->utils->sanitize($request->getQueryParam('isbn'));
+        $read_doi = $this->utils->sanitize($request->getQueryParam('doi'));
+        $read_tags = $this->utils->sanitize($request->getQueryParam('tags'));
 
-        if ($read_of = $request->getQueryParam('read-of', null)) {
+        if ($read_of = $request->getQueryParam('read-of')) {
             $parsed = $this->utils->parse_read_of($read_of);
             $read_title = $this->utils->sanitize($parsed['title']);
             $read_authors = $this->utils->sanitize($parsed['authors']);
             $read_isbn = $this->utils->sanitize($parsed['uid']);
         }
 
-        $this->setTitle('New Post');
-        return $this->theme->render(
+        return $this->view->render(
             $response,
-            'new-post',
-            [
-                'user' => $user,
-                'read_status' => $read_status,
-                'read_title' => $read_title,
-                'read_authors' => $read_authors,
-                'read_isbn' => $read_isbn,
-                'read_doi' => $read_doi,
-                'read_tags' => $read_tags,
-                'options_visibility' => $options_visibility,
-                'micropub_endpoint' => $user->micropub_endpoint,
-                'micropub_media_endpoint' => $user->micropub_media_endpoint,
-                'token_scope' => $user->token_scope,
-                'response_date' => $user->last_micropub_response_date,
-                'tz_offset' => '+0000',
-                'errors' => $errors,
-            ]
+            'pages/new-post.twig',
+            compact(
+                'user',
+                'read_status',
+                'read_title',
+                'read_authors',
+                'read_isbn',
+                'read_doi',
+                'read_tags',
+                'options_status',
+                'options_visibility',
+                'validation_errors'
+            )
         );
     }
 
     /**
-     * Future functionality
+     * Re-try a Micropub request
+     *
+     * Ensures the post is owned by the current user and has not been
+     * published to their site already before sending the Micropub
+     * request.
      * @see https://github.com/gRegorLove/indiebookclub/issues/13
      */
-    // public function retry(ServerRequestInterface $request, ResponseInterface $response, array $args)
-    // {}
+    public function retry(ServerRequestInterface $request, ResponseInterface $response, array $args)
+    {
+        $user = $this->User->get($this->utils->session('user_id'));
+
+        $entry_id = (int) $args['entry_id'];
+        $entry = $this->Entry->getUserEntry($entry_id, $this->utils->session('user_id'));
+        if (!$entry) {
+            return $response->withStatus(404);
+        }
+
+        if ($entry['canonical_url']) {
+            return $this->view->render($response, 'pages/400.twig', [
+                'short_title' => 'Error',
+                'message' => sprintf('<p> This post has already been published on your site. <a href="%s" target="_blank" rel="noopener">View the post</a>. </p>',
+                    $entry['canonical_url']
+                ),
+            ]);
+        }
+
+        if (!$user['micropub_endpoint']) {
+            $response = $response->withStatus(400);
+            return $this->view->render($response, 'pages/400.twig', [
+                'short_title' => 'Micropub Error',
+                'message' => '<p> Your site does not appear to support Micropub. </p>',
+            ]);
+        }
+
+        $url = $this->router->pathFor(
+            'entry',
+            [
+                'domain' => $user['profile_slug'],
+                'entry' => $entry_id,
+            ]
+        );
+
+        // Send to the micropub endpoint and store the result.
+        $mp_request = $this->build_micropub_request($entry);
+
+        $mp_response = $this->utils->micropub_post(
+            $user['micropub_endpoint'],
+            $mp_request,
+            $this->utils->getAccessToken(),
+            true
+        );
+
+        $response_body = trim($mp_response['response']);
+
+        # Update user
+        $user = $this->User->update($this->utils->session('user_id'), [
+            'last_micropub_response' => $response_body,
+        ]);
+
+        # Update entry
+        $entry_data = [
+            'micropub_response' => $response_body,
+        ];
+
+        if (isset($mp_response['headers']['Location'])) {
+            $entry_data['canonical_url'] = reset($mp_response['headers']['Location']);
+            $entry_data['micropub_success'] = 1;
+        }
+
+        $entry = $this->Entry->update($entry_id, $entry_data);
+
+        if ($entry['canonical_url']) {
+            $url = $entry['canonical_url'];
+        }
+
+        return $response->withRedirect($url, 302);
+    }
 
     public function delete(ServerRequestInterface $request, ResponseInterface $response, array $args)
     {
-        $profile = $this->get_user();
+        $profile = $this->User->get($this->utils->session('user_id'));
         $errors = [];
 
         if ($request->isPost()) {
@@ -160,63 +248,70 @@ class IbcController extends Controller
 
             if (!$this->validate_post_request($data, $allowlist)) {
                 $response = $response->withStatus(400);
-                return $this->theme->render($response, '400');
+                return $this->view->render($response, 'pages/400.twig');
             }
 
             $errors = $this->validate_delete_post($data);
 
             if (count($errors) === 0) {
                 # double check: can only delete own posts
-                $entry = ORM::for_table('entries')
-                    ->where('user_id', $this->utils->session('user_id'))
-                    ->where('id', $data['id'])
-                    ->find_one();
-
+                $entry_id = (int) $data['id'];
+                $entry = $this->Entry->getUserEntry($entry_id, $this->utils->session('user_id'));
                 if (!$entry) {
-                    return $response->withStatus(403);
+                    $response = $response->withStatus(403);
+                    return $this->view->render($response, 'pages/400.twig');
                 }
 
                 // Send delete to the micropub endpoint
-                if ($profile->micropub_endpoint && $data['mp_delete'] == 'yes' && $entry->canonical_url) {
+                if ($profile['micropub_endpoint'] && $data['mp_delete'] == 'yes' && $entry['canonical_url']) {
                     $mp_request = [
                         'action' => 'delete',
-                        'url' => $entry->canonical_url,
+                        'url' => $entry['canonical_url'],
                     ];
 
                     $mp_response = $this->utils->micropub_post(
-                        $profile->micropub_endpoint,
+                        $profile['micropub_endpoint'],
                         $mp_request,
                         $this->utils->getAccessToken()
                     );
 
-                    $this->add_last_micropub_response($mp_response, $profile);
+                    $response_body = trim($mp_response['response']);
+
+                    # Update user
+                    $user = $this->User->update($this->utils->session('user_id'), [
+                        'last_micropub_response' => $response_body,
+                    ]);
                 }
 
-                $this->uncache_entry((int) $data['id']);
-                $entry->delete();
+                $this->uncache_entry($entry_id);
+                $this->Entry->delete($entry_id);
 
-                $url = $this->router->pathFor('profile', ['domain' => $profile->profile_slug]);
+                $url = $this->router->pathFor('profile', ['domain' => $profile['profile_slug']]);
                 return $response->withRedirect($url, 302);
             }
 
         } elseif ($request->isGet()) {
-            $entry = ORM::for_table('entries')
-                ->where('user_id', $this->utils->session('user_id'))
-                ->where('id', $args['id'])
-                ->find_one();
-
+            $entry = $this->Entry->getUserEntry((int) $args['id'], $this->utils->session('user_id'));
             if (!$entry) {
                 return $response->withStatus(404);
             }
         }
 
-        $is_micropub_post = ($entry->micropub_success && $entry->canonical_url);
-        $has_micropub_delete = $this->utils->hasMicropubDelete($profile->token_scope);
+        $is_micropub_post = ($entry['micropub_success'] && $entry['canonical_url']);
+        $has_micropub_delete = $this->utils->hasMicropubDelete($profile['token_scope']);
 
-        return $this->theme->render(
+        $is_caching = true;
+        return $this->view->render(
             $response,
-            'delete',
-            compact('errors', 'entry', 'profile', 'is_micropub_post', 'has_micropub_delete')
+            'pages/delete.twig',
+            compact(
+                'errors',
+                'entry',
+                'profile',
+                'is_micropub_post',
+                'has_micropub_delete',
+                'is_caching'
+            )
         );
     }
 
@@ -225,87 +320,25 @@ class IbcController extends Controller
      */
     public function isbn(ServerRequestInterface $request, ResponseInterface $response, array $args)
     {
-        $params = $request->getQueryParams();
-        $per_page = 10;
+        $limit = 2; # default is 10
+        $isbn = $args['isbn'];
+        $before = (int) $request->getQueryParam('before');
+        $entries = $this->Entry->findByIsbn($isbn, $before, $limit);
 
-        $entries = ORM::for_table('entries')
-            ->table_alias('e')
-            ->select_many(
-                'e.*',
-                ['user_url' => 'u.url'],
-                ['user_profile_slug' => 'u.profile_slug'],
-                ['user_photo_url' => 'u.photo_url'],
-                ['user_name' => 'u.name']
-            )
-            ->join('users', ['e.user_id', '=', 'u.id'], 'u')
-            ->where('e.isbn', $args['isbn'])
-            ->where('visibility', 'public')
-            ->order_by_desc('e.published')
-            ->limit($per_page);
+        $last_id = (int) end($entries)['id'];
+        $first_id = (int) reset($entries)['id'];
 
-        if (array_key_exists('before', $params)) {
-            $entries->where_lte('id', $params['before']);
-        }
+        $older_id = $this->Entry->getOlderByIsbn($isbn, $last_id);
+        $newer_id = $this->Entry->getNewerByIsbn($isbn, $first_id);
 
-        $entries = $entries->find_many();
-
-        if (!$entries) {
-            return $response->withStatus(404);
-        }
-
-        $older = $newer = false;
-
-        // Check for 'older' entry id.
-        if (count($entries) > 1) {
-            $older = ORM::for_table('entries')
-                ->where('isbn', $args['isbn'])
-                ->where_lt('id', $entries[count($entries)-1]->id)
-                ->order_by_desc('published')
-                ->find_one();
-        }
-
-        // Check for 'newer' entry id.
-        if (array_key_exists('before', $params)) {
-            $newer = ORM::for_table('entries')
-                ->where('isbn', $args['isbn'])
-                ->where_gte('id', $entries[0]->id)
-                ->order_by_asc('published')
-                ->offset($per_page)
-                ->find_one();
-
-            if (!$newer) {
-                // no new entry was found at the specific offset, so find the newest post to link to instead
-                $newer = ORM::for_table('entries')
-                    ->where('isbn', $args['isbn'])
-                    ->order_by_desc('published')
-                    ->limit(1)
-                    ->find_one();
-
-                if ($newer && $newer->id == $entries[0]->id) {
-                    $newer = false;
-                }
-            }
-
-        }
-
-        return $this->theme->render(
+        return $this->view->render(
             $response,
-            'isbn',
-            [
-                'isbn' => $args['isbn'],
-                'entries' => $entries,
-                'older' => ($older ? $older->id : false),
-                'newer' => ($newer ? $newer->id : false),
-            ]
+            'pages/isbn.twig',
+            compact('isbn', 'entries', 'before', 'older_id', 'newer_id')
         );
     }
 
-    /**
-     * Validate the POST request
-     * @param array $data
-     * @return bool
-     */
-    protected function validate_post_request($data, $allowlist = [])
+    protected function validate_post_request(array $data, array $allowlist = []): bool
     {
         if (!$allowlist) {
             $allowlist = array_fill_keys([
@@ -315,9 +348,10 @@ class IbcController extends Controller
                 'switch-uid',
                 'doi',
                 'isbn',
-                'tags',
+                'category',
                 'visibility',
-                'tzoffset',
+                'published',
+                'tz_offset',
             ], 0);
         }
 
@@ -330,10 +364,10 @@ class IbcController extends Controller
 
     /**
      * Validate new post fields
-     * @param array $data
-     * @return array
+     *
+     * Returns an array of error messages
      */
-    protected function validate_new_post($data)
+    protected function validate_new_post(array $data): array
     {
         $errors = [];
 
@@ -349,11 +383,26 @@ class IbcController extends Controller
             $errors[] = 'The <i>ISBN</i> entered appears to be invalid';
         }
 
+        if ($data['published']) {
+            try {
+                $dt = new DateTime($data['published']);
+                $temp_errors = DateTime::getLastErrors();
+
+                if (!empty($temp_errors['warning_count'])) {
+                    throw new Exception();
+                }
+            } catch (Exception $e) {
+                $errors[] = 'The <i>Published</i> datetime appears to be invalid';
+            }
+        }
+
         return $errors;
     }
 
     /**
      * Validate delete post fields
+     *
+     * Returns an array of error messages
      */
     protected function validate_delete_post(array $data): array
     {
@@ -367,101 +416,30 @@ class IbcController extends Controller
     }
 
     /**
-     * Add/increment ISBN book record to database
-     * @param string $isbn
-     * @param int $user_id
-     * @return bool
-     */
-    protected function add_book($isbn, $user_id)
-    {
-        try {
-            $book = ORM::for_table('books')
-                ->where('isbn', $isbn)
-                ->find_one();
-
-            if ($book) {
-                $book->entry_count += 1;
-            } else {
-                $book = ORM::for_table('books')->create();
-                $book->isbn = $isbn;
-                $book->entry_count = 1;
-                $book->first_user_id = $user_id;
-                $book->set_expr('created', 'NOW()');
-                $book->set_expr('modified', 'NOW()');
-            }
-
-            $book->save();
-            return true;
-        } catch (PDOException $e) {
-            $this->logger->error(
-                'Error adding book. ' . $e->getMessage(),
-                compact('isbn', 'user_id')
-            );
-            return false;
-        }
-    }
-
-    /**
-     * Add read post to database
-     * @param array $data
-     * @return ORM|bool
-     */
-    protected function add_entry($data)
-    {
-        try {
-            $entry = ORM::for_table('entries')->create();
-            $published = new DateTime();
-            $entry->isbn = ($data['isbn']) ? $data['isbn'] : '';
-            $entry->doi = $data['doi'];
-            $entry->user_id = $data['user_id'];
-            $entry->published = $published->format('Y-m-d H:i:s');
-            $entry->tz_offset = $this->utils->tz_offset_to_seconds($data['tzoffset']);
-            $entry->read_status = $data['read_status'];
-            $entry->title = $data['title'];
-            $entry->authors = $data['authors'];
-            $entry->category = $this->utils->normalizeSeparatedString($data['tags']);
-            $entry->visibility = $data['visibility'];
-            $entry->save();
-            return $entry;
-        } catch (PDOException $e) {
-            $this->logger->error(
-                'Error adding entry. ' . $e->getMessage(),
-                $data
-            );
-            return false;
-        }
-    }
-
-    /**
      * Cache read post
-     * @param int $id
-     * @return bool
      */
     protected function cache_entry(int $id): bool
     {
-        $entry = ORM::for_table('entries')
-            ->where('id', $id)
-            ->find_one();
-
         try {
+            $entry = $this->Entry->get($id);
             if (!$entry) {
                 throw new Exception('Could not load entry');
             }
 
-            $profile = $this->get_user_by_id($entry->user_id);
+            $profile = $this->User->get((int) $entry['user_id']);
             if (!$profile) {
                 throw new Exception('Could not load user');
             }
 
             $is_caching = true;
-            $src = $this->theme->renderView(
-                'partials/entry',
+            $src = $this->view->fetch(
+                'partials/entry.twig',
                 compact('entry', 'profile', 'is_caching')
             );
 
             $file_path = sprintf('%s/cache/%s-%d.html',
                 APP_DIR,
-                $profile->profile_slug,
+                $profile['profile_slug'],
                 $id
             );
 
@@ -481,29 +459,23 @@ class IbcController extends Controller
 
     /**
      * Un-cache read post
-     * @param int $id
-     * @return bool
      */
     protected function uncache_entry(int $id): bool
     {
-        $entry = ORM::for_table('entries')
-            ->where('id', $id)
-            ->find_one();
-
         try {
+            $entry = $this->Entry->get($id);
             if (!$entry) {
                 throw new Exception('Could not load entry');
             }
 
-            $user = $this->get_user_by_id($entry->user_id);
-
+            $user = $this->User->get((int) $entry['user_id']);
             if (!$user) {
                 throw new Exception('Could not load user');
             }
 
             $file_path = sprintf('%s/cache/%s-%d.html',
                 APP_DIR,
-                $user->profile_slug,
+                $user['profile_slug'],
                 $id
             );
 
@@ -522,61 +494,9 @@ class IbcController extends Controller
     }
 
     /**
-     * Update database with Micropub response
-     * @param array $mp_response
-     * @param ORM &$user
-     * @param ORM &$entry
-     * @return bool
-     * @author Aaron Parecki, https://aaronparecki.com
-     * @copyright 2014 Aaron Parecki
-     * @license http://www.apache.org/licenses/LICENSE-2.0 Apache License 2.0
+     * Build Micropub request from the entry
      */
-    protected function add_micropub_response($mp_response, &$user, &$entry)
-    {
-        try {
-            $user->last_micropub_response = $mp_response['response'];
-            $user->save();
-
-            $entry->micropub_response = $mp_response['response'];
-            $entry->micropub_success = 0;
-
-            if (isset($mp_response['headers']['Location'])) {
-                $entry->canonical_url = reset($mp_response['headers']['Location']);
-                $entry->micropub_success = 1;
-            }
-
-            $entry->save();
-            return true;
-        } catch (PDOException $e) {
-            $this->logger->error(
-                'Error adding micropub response. ' . $e->getMessage(),
-                $mp_response
-            );
-            return false;
-        }
-    }
-
-    protected function add_last_micropub_response(array $mp_response, $user): bool
-    {
-        try {
-            $user->last_micropub_response = $mp_response['response'];
-            $user->save();
-            return true;
-        } catch (PDOException $e) {
-            $this->logger->error(
-                'Error adding last micropub response. ' . $e->getMessage(),
-                $mp_response
-            );
-            return false;
-        }
-    }
-
-    /**
-     * Build Micropub request from the submitted form
-     * @param array $data
-     * @return array
-     */
-    protected function build_micropub_request($data)
+    protected function build_micropub_request(array $data): array
     {
         $summary = sprintf('%s: %s',
             $this->utils->get_read_status_for_humans($data['read_status']),
@@ -615,8 +535,14 @@ class IbcController extends Controller
             'visibility' => [$data['visibility']],
         ];
 
-        if ($data['tags']) {
-            $properties['category'] = $this->utils->get_category_array($data['tags']);
+        if (array_key_exists('published', $data) && $data['published']) {
+            $properties['published'] = [
+                $this->Entry->get_datetime_with_offset($data['published'], $data['tz_offset']),
+            ];
+        }
+
+        if ($data['category']) {
+            $properties['category'] = $this->utils->get_category_array($data['category']);
         }
 
         return [
