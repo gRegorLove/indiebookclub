@@ -290,6 +290,11 @@ class AuthController extends Controller
      */
     public function signout(ServerRequestInterface $request, ResponseInterface $response, array $args)
     {
+        if (!$this->utils->session('user_id')) {
+            # already signed out
+            return $response->withRedirect('/', 302);
+        }
+
         $user = $this->User->get($this->utils->session('user_id'));
 
         if ($user['revocation_endpoint']) {
