@@ -537,7 +537,7 @@ class IbcController extends Controller
 
         if (array_key_exists('published', $data) && $data['published']) {
             $properties['published'] = [
-                $this->Entry->get_datetime_with_offset($data['published'], $data['tz_offset']),
+                $this->Entry->get_datetime_with_offset($data['published'], (int) $data['tz_offset']),
             ];
         }
 

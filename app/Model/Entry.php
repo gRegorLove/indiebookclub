@@ -402,9 +402,9 @@ class Entry
         return 0;
     }
 
-    public function get_datetime_with_offset(string $date, string $seconds): string
+    public function get_datetime_with_offset(string $date, int $seconds): string
     {
-        $offset = $this->tz_seconds_to_offset((int) $seconds);
+        $offset = $this->tz_seconds_to_offset($seconds);
         $dt = new Datetime($date);
         return $dt->format('Y-m-d H:i:s') . $offset;
     }
