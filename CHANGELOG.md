@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Year in Review page for indiebookclub as a whole, e.g. `/review/2023`
+  - Page is set to start being available November 30 each year.
+  - Stats are updated and cached daily through the new year.
+  - Stats are only for public posts. Private and unlisted posts are not included.
 
 ## [0.1.0] - 2022-11-14
 ### Added

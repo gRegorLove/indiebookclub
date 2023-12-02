@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace App\Model;
 
+use DateTime;
 use ORM;
 
 class Book
@@ -86,6 +87,30 @@ class Book
         }
 
         return null;
+    }
+
+    /**
+     * Get number of books created during the specified timeframe
+     *
+     * Note: books may have been part of a private or unlisted
+     * post, so be careful when querying book information.
+     * That's why current usage is only to get the total number
+     * of new books.
+     */
+    public function getNewCount(
+        string $start_date,
+        string $end_date
+    ): int {
+        $dt_start = new DateTime($start_date);
+        $dt_end = new DateTime($end_date);
+        $dt_end->setTime(23, 59, 59);
+
+        return ORM::for_table($this->table_name)
+            ->where_gte('created', $dt_start->format('Y-m-d'))
+            ->where_lte('created', $dt_end->format('Y-m-d'))
+            ->where_null('deleted')
+            ->order_by_desc('created')
+            ->count();
     }
 }
 

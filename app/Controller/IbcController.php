@@ -338,6 +338,120 @@ class IbcController extends Controller
         );
     }
 
+    public function review(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ) {
+        $year = (int) $args['year'];
+        if ($year < 2023) {
+            return $response->withStatus(404);
+        }
+
+        $dt = new DateTime();
+        $dt_available = new DateTime(sprintf('%d-11-30', $year));
+
+        if ($dt < $dt_available) {
+            $messages = [
+                'Flux capacitor required to view this page.',
+                'Isn’t time flying by fast enough already?',
+                'Patience is a virtue.',
+            ];
+            $index = array_rand($messages, 1);
+
+            $response = $response->withStatus(404);
+            return $this->view->render(
+                $response,
+                'pages/400.twig',
+                [
+                    'short_title' => 'Not Yet!',
+                    'message' => sprintf('<p> %s </p>', $messages[$index])
+                ]
+            );
+        }
+
+        $file_path = sprintf('%s/cache/%d-review.html',
+            APP_DIR,
+            $year
+        );
+
+        # after the new year, don't need to refresh the cache
+        $is_final = ($dt->format('Y') > $year);
+        $is_cached = ($is_final && file_exists($file_path));
+        if ($is_cached) {
+            echo file_get_contents($file_path);
+            exit;
+        }
+
+        # before new year, check if cache is more than 1 day old
+        /*if (file_exists($file_path)) {
+            $cache_time = filemtime($file_path);
+            if (false !== $cache_time) {
+                $dt_cache = new DateTime('@' . $cache_time);
+                $interval = $dt->diff($dt_cache);
+                $days = (int) $interval->format('%a');
+                if ($days < 1) {
+                    $is_cached = true;
+                }
+            }
+        }*/
+
+        if ($is_cached) {
+            echo file_get_contents($file_path);
+            exit;
+        }
+
+        # refresh the cache
+        $start_date = sprintf('%d-01-01', $year);
+        $end_date = sprintf('%d-12-31', $year);
+
+        $number_new_entries = $this->Entry->getNewCount(
+            $start_date,
+            $end_date
+        );
+
+        $number_new_books = $this->Book->getNewCount(
+            $start_date,
+            $end_date
+        );
+
+        $distinct_entries = $this->Entry->findDistinct(
+            $start_date,
+            $end_date
+        );
+
+        $number_new_users = $this->User->getNewCount(
+            $start_date,
+            $end_date
+        );
+
+        $number_logins = $this->User->getLoginCount(
+            $start_date,
+            $end_date
+        );
+
+        $html = $this->view->fetch(
+            'pages/review.twig',
+            compact(
+                'dt',
+                'year',
+                'is_final',
+                'number_new_entries',
+                'number_new_books',
+                'distinct_entries',
+                'number_new_users',
+                'number_logins',
+            )
+        );
+
+        if (file_put_contents($file_path, trim($html)) === false) {
+            throw new Exception('Could not write review cache file');
+        }
+
+        echo $html;
+        exit;
+    }
+
     protected function validate_post_request(array $data, array $allowlist = []): bool
     {
         if (!$allowlist) {

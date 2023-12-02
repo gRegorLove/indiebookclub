@@ -14,6 +14,7 @@ namespace App\Model;
 
 use DateTime;
 use ORM;
+use Mwhite\PhpIsbn\Isbn;
 
 class Entry
 {
@@ -259,6 +260,111 @@ class Entry
             ->where('e.user_id', $user_id)
             ->order_by_desc('published')
             ->find_array();
+    }
+
+    /**
+     * Get number of public posts created during the specified timeframe
+     */
+    public function getNewCount(
+        string $start_date,
+        string $end_date
+    ): int {
+        $dt_start = new DateTime($start_date);
+        $dt_end = new DateTime($end_date);
+        $dt_end->setTime(23, 59, 59);
+
+        return ORM::for_table($this->table_name)
+            ->where('visibility', 'public')
+            ->where_gte('published', $dt_start->format('Y-m-d'))
+            ->where_lte('published', $dt_end->format('Y-m-d'))
+            ->count();
+    }
+
+    /**
+     * Public entries created during the specified timeframe
+     */
+    public function findNew(
+        string $start_date,
+        string $end_date,
+        ?int $user_id = null
+    ): array {
+        $dt_start = new DateTime($start_date);
+        $dt_end = new DateTime($end_date);
+        $dt_end->setTime(23, 59, 59);
+
+        $records = ORM::for_table($this->table_name)
+            ->select_many([
+                'id',
+                'user_id',
+                'title',
+                'isbn',
+                'doi',
+                'canonical_url',
+            ])
+            ->where('visibility', 'public')
+            ->where_gte('published', $dt_start->format('Y-m-d'))
+            ->where_lte('published', $dt_end->format('Y-m-d'))
+            ->order_by_desc('published');
+
+        if ($user_id) {
+            $records = $records->where('user_id', $user_id);
+        }
+
+        return $records->find_array();
+    }
+
+    public function findDistinct(
+        string $start_date,
+        string $end_date
+    ): array {
+        $dt_start = new DateTime($start_date);
+        $dt_end = new DateTime($end_date);
+        $dt_end->setTime(23, 59, 59);
+
+        $results = [];
+
+        $records = ORM::for_table($this->table_name)
+            ->select_many([
+                'id',
+                'title',
+                'authors',
+                'isbn',
+                'doi',
+                // 'user_id',
+                // 'canonical_url',
+            ])
+            ->where('visibility', 'public')
+            ->where_gte('published', $dt_start->format('Y-m-d'))
+            ->where_lte('published', $dt_end->format('Y-m-d'))
+            ->order_by_asc('published')
+            ->find_array();
+
+        foreach ($records as $entry) {
+            if ($entry['isbn'] && ($isbn_ten = Isbn::to10($entry['isbn'], true))) {
+                $entry['isbn'] = $isbn_ten;
+            }
+
+            $index = $entry['isbn'];
+            if (!$index) {
+                # fallback to doi or no_id for results index
+                if ($entry['doi']) {
+                    $index = $entry['doi'];
+                } else {
+                    $index = 'no_id' . $entry['id'];
+                }
+            }
+
+            if (array_key_exists($index, $results)) {
+                $results[$index]['count'] += 1;
+            } else {
+                $results[$index] = array_merge(
+                    $entry,
+                    ['count' => 1]
+                );
+            }
+        }
+
+        return $results;
     }
 
     /**

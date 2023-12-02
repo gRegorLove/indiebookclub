@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace App\Model;
 
+use DateTime;
 use ORM;
 
 class User
@@ -167,5 +168,40 @@ class User
 
         return null;
     }
+
+    /**
+     * Get number of users created during the specified timeframe
+     */
+    public function getNewCount(
+        string $start_date,
+        string $end_date
+    ) {
+        $dt_start = new DateTime($start_date);
+        $dt_end = new DateTime($end_date);
+        $dt_end->setTime(23, 59, 59);
+
+        return ORM::for_table($this->table_name)
+            ->where_gte('date_created', $dt_start->format('Y-m-d'))
+            ->where_lte('date_created', $dt_end->format('Y-m-d'))
+            ->count();
+    }
+
+    /**
+     * Get number of users that signed in during the specified timeframe
+     */
+    public function getLoginCount(
+        string $start_date,
+        string $end_date
+    ) {
+        $dt_start = new DateTime($start_date);
+        $dt_end = new DateTime($end_date);
+        $dt_end->setTime(23, 59, 59);
+
+        return ORM::for_table($this->table_name)
+            ->where_gte('last_login', $dt_start->format('Y-m-d'))
+            // ->where_lte('last_login', $dt_end->format('Y-m-d'))
+            ->count();
+    }
+
 }
 

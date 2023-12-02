@@ -57,3 +57,6 @@ $app->group('/users', function() {
         ->setName('entry');
 });
 
+$app->get('/review/{year}', 'IbcController:review')
+    ->setName('review');
+
