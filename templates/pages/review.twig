@@ -22,6 +22,7 @@
     <ul>
     {% for item in distinct_entries %}
         {%- set title = '<span class="p-name">' ~ item.title ~ '</span>' -%}
+        {%- set uid = '' -%}
         {% if item.isbn %}
             {% set title = '<a href="https://openlibrary.org/isbn/'
                 ~ item.isbn ~ '" class="p-name u-url">'
@@ -32,7 +33,7 @@
         {% endif %}
 
     <li class="h-cite">
-        {{ title|raw }} by <span class="p-author">{{ item.authors }}</span><br>
+        {{ title|raw }}{% if item.authors %} by <span class="p-author">{{ item.authors }}</span>{% endif %}<br>
         {{ uid|raw }}
     </li>
     {% endfor %}

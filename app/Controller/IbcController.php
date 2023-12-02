@@ -384,7 +384,7 @@ class IbcController extends Controller
         }
 
         # before new year, check if cache is more than 1 day old
-        /*if (file_exists($file_path)) {
+        if (file_exists($file_path)) {
             $cache_time = filemtime($file_path);
             if (false !== $cache_time) {
                 $dt_cache = new DateTime('@' . $cache_time);
@@ -394,7 +394,7 @@ class IbcController extends Controller
                     $is_cached = true;
                 }
             }
-        }*/
+        }
 
         if ($is_cached) {
             echo file_get_contents($file_path);

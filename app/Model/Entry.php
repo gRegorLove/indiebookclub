@@ -313,6 +313,13 @@ class Entry
         return $records->find_array();
     }
 
+    /**
+     * Find a list of distinct titles from public posts during
+     * the specified timeframe
+     *
+     * ISBN and DOI are used to determine distinct posts.
+     * If neither identifier, the title is added as distinct.
+     */
     public function findDistinct(
         string $start_date,
         string $end_date
