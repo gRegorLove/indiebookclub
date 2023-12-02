@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2023-12-02
+### Added
+- Year in Review page for indiebookclub as a whole, e.g. `/review/2023`
+  - Page is set to start being available November 30 each year.
+  - Stats are updated and cached daily through the new year.
+  - Stats are only for public posts. Private and unlisted posts are not included.
+
 ## [0.1.0] - 2022-11-14
 ### Added
 - Micropub re-try for posts that failed or were not published previously [#13](https://github.com/gRegorLove/indiebookclub/issues/13)

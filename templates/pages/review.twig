@@ -1,0 +1,45 @@
+{% extends 'layouts/default-layout.twig' %}
+
+{% set short_title = year ~ ' Year in Review' %}
+{% set word_domain = number_logins == 1 ? 'domain' : 'domains' %}
+
+{% block content %}
+<div class="h-entry">
+    <h1 class="p-name"> {{ short_title }} </h1>
+
+    <div class="e-content">
+        <p class="p-summary"> {% if is_final == false %}<b>So far:</b> {% endif %}In {{ year }} indiebookclub had <b>{{ number_new_entries }}</b> public posts and at least <b>{{ number_new_books }}</b> new books<sup>*</sup> added. <b>{{ number_logins }}</b> {{ word_domain }} signed in and <b>{{ number_new_users }}</b> of them were new to indiebookclub. </p>
+
+        {% if is_final == false %}<p> This page will update daily until {{ '2024-01-01'|date('F j, Y') }}. </p>{% endif %}
+
+        <small>* <i>New</i> to indiebookclub as measured by unique ISBN in posts. Since the ISBN is optional when posting, the actual number of new books may be higher. </small>
+    </div>
+
+    <h2> What People Read This Year <small>(Or wanted to!)</small> </h2>
+
+    <p> From public indiebookclub posts. Links below are to <a href="https://openlibrary.org">Open Library</a>. If any information is incorrect or missing, Open Library welcomes <a href="https://openlibrary.org/about">contributions</a>. </p>
+
+    <ul>
+    {% for item in distinct_entries %}
+        {%- set title = '<span class="p-name">' ~ item.title ~ '</span>' -%}
+        {%- set uid = '' -%}
+        {% if item.isbn %}
+            {% set title = '<a href="https://openlibrary.org/isbn/'
+                ~ item.isbn ~ '" class="p-name u-url">'
+                ~ item.title ~ '</a>' %}
+            {% set uid = '<small>ISBN: <span class="p-uid">' ~ item.isbn ~ '</span></small>' %}
+        {% elseif item.doi %}
+            {% set uid = '<small><span class="p-uid">doi: ' ~ item.doi ~ '</span></small>' %}
+        {% endif %}
+
+    <li class="h-cite">
+        {{ title|raw }}{% if item.authors %} by <span class="p-author">{{ item.authors }}</span>{% endif %}<br>
+        {{ uid|raw }}
+    </li>
+    {% endfor %}
+    </ul>
+
+    <small> This page last cached: <time class="dt-published">{{ dt|date('Y-m-d H:i:sO') }}</time></small>
+</div>
+{% endblock %}
+
