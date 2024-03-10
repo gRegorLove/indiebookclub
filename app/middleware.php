@@ -2,8 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Middleware\AuthorizationMiddleware;
+use Psr\Http\Message\{
+    ResponseInterface,
+    ServerRequestInterface
+};
+
 // Maintenance mode
-$app->add(function ($request, $response, $next) use ($container) {
+$app->add(function (ServerRequestInterface $request, ResponseInterface $response, $next) use ($container) {
     if ($this->get('settings')['offline'] && $_SERVER['REMOTE_ADDR'] != $this->settings['developer_ip']) {
         $response = $response->withStatus(503)->withHeader('Retry-After', 3600);
         return $this->view->render($response, 'pages/maintenance.twig');
@@ -11,42 +17,11 @@ $app->add(function ($request, $response, $next) use ($container) {
     return $next($request, $response);
 });
 
-// Route-based access controls
-$app->add(function ($request, $response, $next) use ($container) {
-    $route = $request->getAttribute('route');
-
-    if (!$route) {
-        return $next($request, $response);
-    }
-
-    $route_name = $route->getName();
-
-    $authenticated_route_names = [
-        'new',
-        'delete',
-        'settings',
-        'settings_update',
-        'auth_reset',
-        'auth_re_authorize',
-    ];
-
-    if (in_array($route_name, $authenticated_route_names) && !array_key_exists('user_id', $_SESSION)) {
-        if ($request->isPost()) {
-            $response = $response->withStatus(401);
-            return $container->view->render($response, 'pages/400.twig', [
-                'short_title' => 'Unauthorized',
-                'message' => '<p> Please log in </p>',
-            ]);
-        }
-
-        return $response->withRedirect($this->router->pathFor('index'), 302);
-    }
-
-    return $next($request, $response);
-});
+## Authorization middleware
+$app->add( new AuthorizationMiddleware($container) );
 
 // Security headers
-$app->add(function ($request, $response, $next) {
+$app->add(function (ServerRequestInterface $request, ResponseInterface $response, $next) {
     $response = $next($request, $response);
     return $response
         ->withHeader('Strict-Transport-Security', 'max-age=10368000; includeSubDomains')
@@ -56,7 +31,7 @@ $app->add(function ($request, $response, $next) {
 });
 
 // 404 Handler
-$app->add(function ($request, $response, $next) use ($container) {
+$app->add(function (ServerRequestInterface $request, ResponseInterface $response, $next) use ($container) {
     $response = $next($request, $response);
 
     if (404 === $response->getStatusCode() && 0 === $response->getBody()->getSize()) {
@@ -69,7 +44,7 @@ $app->add(function ($request, $response, $next) use ($container) {
 
 
 // No trailing slash on URLs
-$app->add(function ($request, $response, $next) {
+$app->add(function (ServerRequestInterface $request, ResponseInterface $response, $next) {
     $uri = $request->getUri();
     $path = $uri->getPath();
 

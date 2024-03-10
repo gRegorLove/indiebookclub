@@ -20,8 +20,12 @@
         {% else %}
         <p>To use indiebookclub, sign in with your domain. If your website supports <a href="https://micropub.net">Micropub</a>, it will post directly to your site. Otherwise, it will post to your profile on this website.</p>
 
+        {% if show_signin_prompt %}
+            <div class="alert alert-warning">Please sign in again</div>
+        {% endif %}
+
         <form action="{{ path_for('auth_start') }}" method="get" class="sign-in">
-            <input type="text" name="me" placeholder="https://example.com" autocomplete="url" autocapitalize="off" required>
+            <input type="text" name="me" placeholder="https://example.com" autocomplete="url" autocapitalize="off" autofocus required>
             <input type="submit" value="Sign In">
         </form>
         {% endif %}

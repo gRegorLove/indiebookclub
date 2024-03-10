@@ -36,8 +36,11 @@ class AuthController extends Controller
     /**
      * Start the authentication process
      */
-    public function start(ServerRequestInterface $request, ResponseInterface $response, array $args)
-    {
+    public function start(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ) {
         // Attempt to normalize the 'me' parameter or display an error
         $me = $request->getQueryParam('me', '');
         $me = Client::normalizeMeURL(trim($me));
@@ -142,8 +145,11 @@ class AuthController extends Controller
     /**
      * Handle authentication callback
      */
-    public function callback(ServerRequestInterface $request, ResponseInterface $response, array $args)
-    {
+    public function callback(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ) {
         $this->initClient();
 
         $params = $request->getQueryParams();
@@ -223,14 +229,26 @@ class AuthController extends Controller
         unset($_SESSION['micropub_endpoint']);
         unset($_SESSION['token_endpoint']);
 
-        return $response->withRedirect('/new', 302);
+        # default redirect
+        $redirect_url = $this->router->pathFor('new');
+
+        if ($signin_redirect = $this->utils->session('signin_redirect')) {
+            # override with redirect that was previously sanitized and verified
+            $redirect_url = $signin_redirect;
+            unset($_SESSION['signin_redirect']);
+        }
+
+        return $response->withRedirect($redirect_url, 302);
     }
 
     /**
      * Route that handles re-authorizing
      */
-    public function re_authorize(ServerRequestInterface $request, ResponseInterface $response, array $args)
-    {
+    public function re_authorize(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ) {
         $user = $this->User->get($this->utils->session('user_id'));
 
         if ($request->isPost()) {
@@ -279,8 +297,11 @@ class AuthController extends Controller
     /**
      * Reset endpoints then redirect to signout
      */
-    public function reset(ServerRequestInterface $request, ResponseInterface $response, array $args)
-    {
+    public function reset(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ) {
         $this->User->reset($this->utils->session('user_id'));
         return $response->withRedirect($this->router->pathFor('signout'), 302);
     }
@@ -288,8 +309,11 @@ class AuthController extends Controller
     /**
      * Revoke access token, if applicable, and signout
      */
-    public function signout(ServerRequestInterface $request, ResponseInterface $response, array $args)
-    {
+    public function signout(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ) {
         if (!$this->utils->session('user_id')) {
             # already signed out
             return $response->withRedirect('/', 302);
