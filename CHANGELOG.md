@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Add `draft` scope and `post-status` support [#21](https://github.com/gRegorLove/indiebookclub/issues/21)
+- Show an error if a Micropub user did not grant `create` scope [#21]
+
+### Changed
+- Persist /new query parameters [#22](https://github.com/gRegorLove/indiebookclub/issues/22)
+
 
 ## [0.1.1] - 2023-12-02
 ### Added
