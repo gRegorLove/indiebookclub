@@ -38,6 +38,9 @@ class Entry
         $record->authors = $data['authors'] ?? '';
         $record->category = $data['category'] ?? '';
         $record->visibility = $data['visibility'] ?? '';
+        $record->canonical_url = $data['canonical_url'] ?? '';
+        $record->micropub_success = (int) ($data['micropub_success'] ?? 0);
+        $record->micropub_response = $data['micropub_response'] ?? '';
 
         if ($record->save()) {
             return $this->get((int) $record->id);

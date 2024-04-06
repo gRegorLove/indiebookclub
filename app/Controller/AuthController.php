@@ -96,7 +96,7 @@ class AuthController extends Controller
         $is_micropub_user = ($authorization_endpoint && $token_endpoint && $micropub_endpoint);
 
         if ($is_micropub_user) {
-            list($authorization_url, $error) = Client::begin($me, 'create profile');
+            list($authorization_url, $error) = Client::begin($me, 'create draft profile');
         } else {
             if (!$authorization_endpoint) {
                 $authorization_endpoint = 'https://indielogin.com/auth';

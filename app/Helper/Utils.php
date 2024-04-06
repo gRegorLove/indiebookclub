@@ -129,6 +129,17 @@ class Utils
     }
 
     /**
+     * Get list of post_status options
+     */
+    public function get_post_status_options(): array
+    {
+        return [
+            'published',
+            'draft',
+        ];
+    }
+
+    /**
      * Get list of visibility options
      *
      * This depends on what the Micropub endpoint indicates
@@ -272,10 +283,10 @@ class Utils
         return $url . $join_char . http_build_query($params);
     }
 
-    public function hasMicropubDelete(string $scopes): bool
+    public function hasScope(string $scopes, string $expected): bool
     {
         $scopes = explode(' ', $this->normalizeSeparatedString($scopes, ' '));
-        return in_array('delete', $scopes);
+        return in_array($expected, $scopes);
     }
 
     /**
