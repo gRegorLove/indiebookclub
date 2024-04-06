@@ -173,8 +173,18 @@ class AuthController extends Controller
             }
         }
 
+        $granted_scopes = $indieauth_response['response']['scope'] ?? '';
+
         $supported_visibility = '';
         if ($micropub_endpoint = $this->utils->session('micropub_endpoint')) {
+
+            if (!$this->utils->hasScope($granted_scopes, 'create')) {
+                return $this->httpErrorResponse(
+                    $response,
+                    'You must grant the “create” permission in order to publish to your site. Please sign in again.'
+                );
+            }
+
             # get config from the Micropub endpoint
             $config_response = $this->utils->micropub_get(
                 $micropub_endpoint,
@@ -198,7 +208,7 @@ class AuthController extends Controller
             'revocation_endpoint' => $this->utils->session('revocation_endpoint'),
             'micropub_endpoint' => $this->utils->session('micropub_endpoint'),
             'supported_visibility' => $supported_visibility,
-            'token_scope' => $indieauth_response['response']['scope'] ?? '',
+            'token_scope' => $granted_scopes,
             'last_login' => true,
         ];
 
