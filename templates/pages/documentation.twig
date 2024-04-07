@@ -27,7 +27,8 @@
         }
       }
     ],
-    "visibility": ["public"]
+    "visibility": ["public"],
+    "post-status": ["published"]
   }
 }</pre>
 
@@ -35,6 +36,7 @@
         <p> <code>uid</code> will have a scheme of either <code>isbn:</code> or <code>doi:</code> based on your selection </p>
         <p> <code>author</code> and <code>uid</code> properties will only be included if you enter those fields. </p>
         <p> <code>visibility</code> will be “public”, “private”, or “unlisted” based on your selection. The private and unlisted options are only available if your Micropub endpoint indicates it supports them. </p>
+        <p> <code>post-status</code> will be “published” or “draft” based on your selection. Note that drafts are only sent to your Micropub endpoint and are not stored on your indiebookclub profile. </p>
 
         <h3 id="query"> Query Parameters </h3>
         <p> The <a href="{{ path_for('new') }}">new post</a> form accepts URL query parameters to pre-populate fields. This can be used with bookmarklets to make adding new posts easier. </p>
@@ -47,6 +49,7 @@
             <li> <code>isbn</code> </li>
             <li> <code>doi</code> </li>
             <li> <code>tags</code> </li>
+            <li> <code>post-status</code>: Values “published” or “draft” (not case-sensitive) </li>
         </ul>
 
         <p> <b>Consuming read posts</b> </p>

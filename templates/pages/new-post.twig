@@ -48,6 +48,19 @@
         <input type="text" name="category" id="i_category" value="{{ read_tags }}" class="util-full-width">
     </p>
 
+    {% if user.micropub_endpoint %}
+    <p>
+        <label for="i_post_status">Status:</label>
+        <select name="post_status" id="i_post_status" class="util-full-width" required>
+            {% for value in options_post_status %}
+            <option value="{{ value }}" {{ value == post_status ? 'selected' }}>{{ value }}</option>
+            {% endfor %}
+        </select>
+    </p>
+    {% else %}
+        <input type="hidden" name="post_status" value="published">
+    {% endif %}
+
     <p>
         <label for="i_visibility">Visibility:</label>
         <select name="visibility" id="i_visibility" class="util-full-width" xrequired>

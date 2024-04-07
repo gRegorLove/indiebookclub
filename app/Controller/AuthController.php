@@ -36,8 +36,11 @@ class AuthController extends Controller
     /**
      * Start the authentication process
      */
-    public function start(ServerRequestInterface $request, ResponseInterface $response, array $args)
-    {
+    public function start(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ) {
         // Attempt to normalize the 'me' parameter or display an error
         $me = $request->getQueryParam('me', '');
         $me = Client::normalizeMeURL(trim($me));
@@ -93,7 +96,7 @@ class AuthController extends Controller
         $is_micropub_user = ($authorization_endpoint && $token_endpoint && $micropub_endpoint);
 
         if ($is_micropub_user) {
-            list($authorization_url, $error) = Client::begin($me, 'create profile');
+            list($authorization_url, $error) = Client::begin($me, 'create draft profile');
         } else {
             if (!$authorization_endpoint) {
                 $authorization_endpoint = 'https://indielogin.com/auth';
@@ -142,8 +145,11 @@ class AuthController extends Controller
     /**
      * Handle authentication callback
      */
-    public function callback(ServerRequestInterface $request, ResponseInterface $response, array $args)
-    {
+    public function callback(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ) {
         $this->initClient();
 
         $params = $request->getQueryParams();
@@ -167,8 +173,18 @@ class AuthController extends Controller
             }
         }
 
+        $granted_scopes = $indieauth_response['response']['scope'] ?? '';
+
         $supported_visibility = '';
         if ($micropub_endpoint = $this->utils->session('micropub_endpoint')) {
+
+            if (!$this->utils->hasScope($granted_scopes, 'create')) {
+                return $this->httpErrorResponse(
+                    $response,
+                    'You must grant the “create” permission in order to publish to your site. Please sign in again.'
+                );
+            }
+
             # get config from the Micropub endpoint
             $config_response = $this->utils->micropub_get(
                 $micropub_endpoint,
@@ -192,7 +208,7 @@ class AuthController extends Controller
             'revocation_endpoint' => $this->utils->session('revocation_endpoint'),
             'micropub_endpoint' => $this->utils->session('micropub_endpoint'),
             'supported_visibility' => $supported_visibility,
-            'token_scope' => $indieauth_response['response']['scope'] ?? '',
+            'token_scope' => $granted_scopes,
             'last_login' => true,
         ];
 
@@ -223,14 +239,26 @@ class AuthController extends Controller
         unset($_SESSION['micropub_endpoint']);
         unset($_SESSION['token_endpoint']);
 
-        return $response->withRedirect('/new', 302);
+        # default redirect
+        $redirect_url = $this->router->pathFor('new');
+
+        if ($signin_redirect = $this->utils->session('signin_redirect')) {
+            # override with redirect that was previously sanitized and verified
+            $redirect_url = $signin_redirect;
+            unset($_SESSION['signin_redirect']);
+        }
+
+        return $response->withRedirect($redirect_url, 302);
     }
 
     /**
      * Route that handles re-authorizing
      */
-    public function re_authorize(ServerRequestInterface $request, ResponseInterface $response, array $args)
-    {
+    public function re_authorize(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ) {
         $user = $this->User->get($this->utils->session('user_id'));
 
         if ($request->isPost()) {
@@ -279,8 +307,11 @@ class AuthController extends Controller
     /**
      * Reset endpoints then redirect to signout
      */
-    public function reset(ServerRequestInterface $request, ResponseInterface $response, array $args)
-    {
+    public function reset(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ) {
         $this->User->reset($this->utils->session('user_id'));
         return $response->withRedirect($this->router->pathFor('signout'), 302);
     }
@@ -288,8 +319,11 @@ class AuthController extends Controller
     /**
      * Revoke access token, if applicable, and signout
      */
-    public function signout(ServerRequestInterface $request, ResponseInterface $response, array $args)
-    {
+    public function signout(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ) {
         if (!$this->utils->session('user_id')) {
             # already signed out
             return $response->withRedirect('/', 302);

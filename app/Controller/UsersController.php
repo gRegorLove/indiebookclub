@@ -22,8 +22,11 @@ class UsersController extends Controller
     /**
      * Route that handles the profile stream
      */
-    public function profile(ServerRequestInterface $request, ResponseInterface $response, array $args)
-    {
+    public function profile(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ) {
         $profile = $this->User->findBySlug($args['domain']);
         if (!$profile) {
             return $response->withStatus(404);

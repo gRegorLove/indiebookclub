@@ -129,6 +129,17 @@ class Utils
     }
 
     /**
+     * Get list of post_status options
+     */
+    public function get_post_status_options(): array
+    {
+        return [
+            'published',
+            'draft',
+        ];
+    }
+
+    /**
      * Get list of visibility options
      *
      * This depends on what the Micropub endpoint indicates
@@ -219,6 +230,42 @@ class Utils
         return $profile;
     }
 
+    public function is_url_allowed(string $url): bool
+    {
+        $allowlist_hosts = [
+            'indiebookclub.biz',
+            'dev.indiebookclub.biz',
+        ];
+
+        $url = filter_var($url, FILTER_SANITIZE_URL);
+        $info = parse_url($url);
+        $scheme = (string) ($info['scheme'] ?? '');
+        $hostname = $info['host'] ?? null;
+
+        # invalid scheme
+        if ($scheme && !in_array($scheme, ['https'])) {
+            return false;
+        }
+
+        # hostname is not in allowlist
+        if ($hostname && !in_array($hostname, $allowlist_hosts)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function get_redirect(
+        string $url,
+        string $default_destination = '/'
+    ): string {
+        if ($this->is_url_allowed($url)) {
+            return $url;
+        }
+
+        return $default_destination;
+    }
+
     /**
      * Append query params to a URL
      */
@@ -236,10 +283,10 @@ class Utils
         return $url . $join_char . http_build_query($params);
     }
 
-    public function hasMicropubDelete(string $scopes): bool
+    public function hasScope(string $scopes, string $expected): bool
     {
         $scopes = explode(' ', $this->normalizeSeparatedString($scopes, ' '));
-        return in_array('delete', $scopes);
+        return in_array($expected, $scopes);
     }
 
     /**

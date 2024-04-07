@@ -31,8 +31,11 @@ class IbcController extends Controller
     /**
      * Handle the new post process
      */
-    public function new(ServerRequestInterface $request, ResponseInterface $response, array $args)
-    {
+    public function new(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ) {
         $user = $this->User->get($this->utils->session('user_id'));
         $validation_errors = [];
 
@@ -47,6 +50,57 @@ class IbcController extends Controller
             $validation_errors = $this->validate_new_post($data);
 
             if (count($validation_errors) === 0) {
+
+                if ($user['micropub_endpoint']) {
+                    $mp_request = $this->build_micropub_request($data);
+
+                    $mp_response = $this->utils->micropub_post(
+                        $user['micropub_endpoint'],
+                        $mp_request,
+                        $this->utils->getAccessToken(),
+                        true
+                    );
+
+                    $response_body = trim($mp_response['response']);
+
+                    $canonical_url = null;
+                    if (isset($mp_response['headers']['Location'])) {
+                        $canonical_url = $data['canonical_url'] = $mp_response['headers']['Location'][0];
+                        $data['micropub_success'] = 1;
+                    }
+
+                    # DEBUG
+                    // $response_body = 'debug';
+                    // $canonical_url = $data['canonical_url'] = 'https://example.com/debug';
+                    // $data['micropub_success'] = 1;
+                    // $data['post_status'] = 'published';
+
+                    # Update user
+                    $user = $this->User->update(
+                        $this->utils->session('user_id'),
+                        [
+                            'last_micropub_response' => $response_body,
+                        ]
+                    );
+
+                    if ('draft' == $data['post_status']) {
+                        # drafts are only sent to Micropub endpoint, not stored on IBC
+
+                        # default redirect: IBC profile
+                        $url = $this->router->pathFor('profile', ['domain' => $user['profile_slug']]);
+                        if ($canonical_url) {
+                            # redirect to canonical
+                            $url = $canonical_url;
+                        }
+
+                        return $response->withRedirect($url, 302);
+                    }
+
+                    # continue to add entry to IBC at this point
+
+                    $data['micropub_response'] = $response_body;
+                }
+
                 $data['user_id'] = $this->utils->session('user_id');
 
                 if ($data['isbn'] = Isbn::to13($data['isbn'])) {
@@ -64,6 +118,7 @@ class IbcController extends Controller
                 $entry_id = (int) $entry['id'];
                 $this->cache_entry($entry_id);
 
+                # default redirect: IBC permalink
                 $url = $this->router->pathFor(
                     'entry',
                     [
@@ -72,39 +127,9 @@ class IbcController extends Controller
                     ]
                 );
 
-                // Send to the micropub endpoint (if one is defined) and store the result.
-                if ($user['micropub_endpoint']) {
-                    $mp_request = $this->build_micropub_request($entry);
-
-                    $mp_response = $this->utils->micropub_post(
-                        $user['micropub_endpoint'],
-                        $mp_request,
-                        $this->utils->getAccessToken(),
-                        true
-                    );
-
-                    $response_body = trim($mp_response['response']);
-
-                    # Update user
-                    $user = $this->User->update($this->utils->session('user_id'), [
-                        'last_micropub_response' => $response_body,
-                    ]);
-
-                    # Update entry
-                    $entry_data = [
-                        'micropub_response' => $response_body,
-                    ];
-
-                    if (isset($mp_response['headers']['Location'])) {
-                        $entry_data['canonical_url'] = reset($mp_response['headers']['Location']);
-                        $entry_data['micropub_success'] = 1;
-                    }
-
-                    $entry = $this->Entry->update($entry_id, $entry_data);
-
-                    if ($entry['canonical_url']) {
-                        $url = $entry['canonical_url'];
-                    }
+                if ($entry['canonical_url']) {
+                    # redirect to canonical
+                    $url = $entry['canonical_url'];
                 }
 
                 return $response->withRedirect($url, 302);
@@ -112,7 +137,20 @@ class IbcController extends Controller
         }
 
         $options_status = $this->utils->get_read_status_options();
+        $options_post_status = $this->utils->get_post_status_options();
         $options_visibility = $this->utils->get_visibility_options($user);
+
+        $post_status = null;
+        if ($this->utils->hasScope($user['token_scope'], 'draft')) {
+            $post_status = 'draft';
+        }
+
+        if ($temp_status = $request->getQueryParam('post-status')) {
+            $post_status = strtolower($temp_status);
+            if (!in_array($post_status, $this->utils->get_post_status_options())) {
+                $post_status = 'published';
+            }
+        }
 
         if ($read_status = $request->getQueryParam('read-status')) {
             $read_status = strtolower($read_status);
@@ -146,7 +184,9 @@ class IbcController extends Controller
                 'read_isbn',
                 'read_doi',
                 'read_tags',
+                'post_status',
                 'options_status',
+                'options_post_status',
                 'options_visibility',
                 'validation_errors'
             )
@@ -161,8 +201,11 @@ class IbcController extends Controller
      * request.
      * @see https://github.com/gRegorLove/indiebookclub/issues/13
      */
-    public function retry(ServerRequestInterface $request, ResponseInterface $response, array $args)
-    {
+    public function retry(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ) {
         $user = $this->User->get($this->utils->session('user_id'));
 
         $entry_id = (int) $args['entry_id'];
@@ -232,8 +275,11 @@ class IbcController extends Controller
         return $response->withRedirect($url, 302);
     }
 
-    public function delete(ServerRequestInterface $request, ResponseInterface $response, array $args)
-    {
+    public function delete(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ) {
         $profile = $this->User->get($this->utils->session('user_id'));
         $errors = [];
 
@@ -298,7 +344,7 @@ class IbcController extends Controller
         }
 
         $is_micropub_post = ($entry['micropub_success'] && $entry['canonical_url']);
-        $has_micropub_delete = $this->utils->hasMicropubDelete($profile['token_scope']);
+        $has_micropub_delete = $this->utils->hasScope($profile['token_scope'], 'delete');
 
         $is_caching = true;
         return $this->view->render(
@@ -318,8 +364,11 @@ class IbcController extends Controller
     /**
      * Route that handles the ISBN stream
      */
-    public function isbn(ServerRequestInterface $request, ResponseInterface $response, array $args)
-    {
+    public function isbn(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ) {
         $limit = 2; # default is 10
         $isbn = $args['isbn'];
         $before = (int) $request->getQueryParam('before');
@@ -463,6 +512,7 @@ class IbcController extends Controller
                 'doi',
                 'isbn',
                 'category',
+                'post_status',
                 'visibility',
                 'published',
                 'tz_offset',
@@ -630,7 +680,6 @@ class IbcController extends Controller
         }
 
         if ($doi = $data['doi']) {
-
             if (stripos($doi, 'doi:') !== 0) {
                 $doi = 'doi:' . $doi;
             }
@@ -646,12 +695,16 @@ class IbcController extends Controller
             'summary' => [$summary],
             'read-status' => [$data['read_status']],
             'read-of' => [$cite],
+            'post-status' => [$data['post_status']],
             'visibility' => [$data['visibility']],
         ];
 
         if (array_key_exists('published', $data) && $data['published']) {
             $properties['published'] = [
-                $this->Entry->get_datetime_with_offset($data['published'], (int) $data['tz_offset']),
+                $this->Entry->get_datetime_with_offset(
+                    $data['published'],
+                    (int) $data['tz_offset']
+                ),
             ];
         }
 
