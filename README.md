@@ -6,7 +6,7 @@ indiebookclub requires PHP, MySQL, and Composer. It is intended to be installed 
 
 * Set the domain’s document root to the `/public` directory
 * Configure the server to route requests through `/public/index.php` if they don’t match a file
-  * If you are running Apache, do this by renaming `/public/htaccess.txt` to `/.htaccess`
+  * If you are running Apache, do this by renaming `/public/htaccess.txt` to `/public/.htaccess`
 * Set up MySQL tables using `/schema/schema.sql`
 * Run `composer install`
 * Rename `/.env.example` to `/.env` and fill in your email, hostname, base URL, and MySQL connection information
