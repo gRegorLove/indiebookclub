@@ -16,6 +16,8 @@ $app->group('/auth', function() {
         ->setName($prefix . '_re_authorize');
 });
 
+$app->get('/id', 'AuthController:client_metadata')
+    ->setName('client_metadata');
 $app->get('/', 'PageController:index')
     ->setName('index');
 $app->get('/about', 'PageController:about')

@@ -26,11 +26,31 @@ class AuthController extends Controller
 {
     private function initClient(): void
     {
-        // The client ID should be the home page of your app.
-        Client::$clientID = sprintf('https://%s/', $_ENV['IBC_HOSTNAME']);
+        // The client ID is the URL that returns client information in JSON
+        // See https://github.com/indieweb/indieauth/issues/133
+        Client::$clientID = $_ENV['IBC_BASE_URL'] . '/id';
 
         // The redirect URL is where the user will be returned to after they approve the request.
         Client::$redirectURL = $_ENV['IBC_BASE_URL'] . $this->router->pathFor('auth_callback');
+
+        // Previously: The client ID should be the home page of your app.
+        // Client::$clientID = sprintf('https://%s/', $_ENV['IBC_HOSTNAME']);
+    }
+
+    public function client_metadata(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ) {
+        return $response->withJson([
+            'client_id' => $_ENV['IBC_BASE_URL'] . '/id',
+            'client_name' => 'indiebookclub',
+            'client_uri' => $_ENV['IBC_BASE_URL'] . '/',
+            'logo_uri' => $_ENV['IBC_BASE_URL'] . '/images/book.svg',
+            'redirect_uris' => [
+                $_ENV['IBC_BASE_URL'] . $this->router->pathFor('auth_callback'),
+            ],
+        ]);
     }
 
     /**

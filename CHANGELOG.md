@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] 2024-06-15
+### Changed
+- Added client metadata JSON endpoint and updated client_id in IndieAuth requests
+- See https://github.com/indieweb/indieauth/issues/133
+
 ## [0.1.2] 2024-04-07
 ### Added
 - Add `draft` scope and `post-status` support [#21](https://github.com/gRegorLove/indiebookclub/issues/21)
