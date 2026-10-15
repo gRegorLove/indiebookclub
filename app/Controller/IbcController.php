@@ -419,6 +419,8 @@ class IbcController extends Controller
             );
         }
 
+        $dt_closes = new DateTime(sprintf('%d-01-01', $year + 1));
+
         $file_path = sprintf('%s/cache/%d-review.html',
             APP_DIR,
             $year
@@ -484,6 +486,7 @@ class IbcController extends Controller
             compact(
                 'dt',
                 'year',
+                'dt_closes',
                 'is_final',
                 'number_new_entries',
                 'number_new_books',
