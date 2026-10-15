@@ -1,0 +1,62 @@
+{% extends 'layouts/default-layout.twig' %}
+
+{% set short_title = 'Search' %}
+
+{% block content %}
+
+<h2> {{ short_title }} </h2>
+
+{% include('partials/interactive-messages.twig') %}
+
+{% if search_results.total is defined %}
+    {%- set word_results = (search_results.total == 1) ? 'result' : 'results' -%}
+    {%- set max_page = (search_results.total / limit) -%}
+
+    <p>
+        {{ search_results.total|number_format }} {{ word_results }} found. <a href="{{ path_for('search') }}">Perform a new search?</a>
+        {% if search_results.total > limit %}
+            <span class="help-block">Showing {{ limit }} results per page.</span>
+        {% endif %}
+    </p>
+
+    <ul class="search-results">
+        {% for item in search_results.cites %}
+        {%- set url_add = path_for('new', {}, {
+            'title': item.name,
+            'authors': item.author,
+            'isbn': item.isbn,
+            'cover_id': item.cover_id,
+            'via': 'search',
+        }) ~%}
+
+        <li class="search-result h-cite"> <a href="{{ url_add }}" title="Click to add to my list">{% if item.image %}<img src="{{ item.image }}" alt="">{% else %} <div class="no-cover">No cover image</div>{% endif %}</a> <div><cite class="p-name">{{ item.name }}</cite>{% if item.author %} by <span class="p-author">{{ item.author}}</span>{% endif %}<br> <a href="{{ url_add }}">Add to my list</a></div> </li>
+        {% endfor %}
+    </ul>
+    <p> Page {{ page }} of {{ max_page|round(0, 'ceil') }}.
+    {% if page > 1 %}<a href="{{ path_for('search', {}, {'keywords': keywords, 'page': page - 1}) }}">Previous page</a>{% endif %}
+    {% if search_results.total >= (page * limit) %} | <a href="{{ path_for('search', {}, {'keywords': keywords, 'page': page + 1}) }}">Next page</a>{% endif %} </p>
+
+{% else %}
+
+<form method="get" action="{{ path_for('search') }}" style="margin-top: 20px;">
+    <p>
+        <label for="i_keywords">Search by title, author, or ISBN:</label>
+        <input type="text" name="keywords" id="i_keywords" class="util-full-width" autofocus required>
+    </p>
+    <p>
+        Search by:<br>
+        <label><input type="radio" name="type" value="title" required checked> Title</label><br>
+        <label><input type="radio" name="type" value="author" required> Author</label><br>
+        <label><input type="radio" name="type" value="isbn" required> ISBN</label><br>
+        <label><input type="radio" name="type" value="all" required> All</label><br>
+    </p>
+
+    <input type="submit" value="Search">
+</form>
+
+<p> Search uses <a href="https://openlibrary.org/">Open Library</a>, an initiative of <a href="https://archive.org/">Internet Archive</a>. See their <a href="https://archive.org/about/terms">privacy policy</a>. </p>
+
+{% endif %}
+
+{% endblock content %}
+

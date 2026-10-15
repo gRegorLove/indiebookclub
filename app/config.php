@@ -12,11 +12,13 @@ try {
     if (file_exists($cached_env_file)) {
         require $cached_env_file;
     } else {
-        # otherwise load from .env file
+        # otherwise, increase error_reporting
+        error_reporting(E_ALL & ~E_DEPRECATED);
+        ini_set('display_errors', '1');
+
+        # and load from .env file
         $dotenv = Dotenv::createImmutable(dirname(__DIR__));
         $dotenv->load();
-        error_reporting(E_ALL);
-        ini_set('display_errors', '1');
 
         ## require these environment variables
         $dotenv->required([
@@ -55,6 +57,7 @@ ini_set('session.use_only_cookies', '1');
 ini_set('session.cookie_lifetime', '0');
 ini_set('session.cookie_secure', '1');
 ini_set('session.cookie_httponly', '1');
+ini_set('session.cookie_samesite', 'Lax');
 ini_set('session.cache_expire', '30');
 ini_set('session.sid_length', '48');
 ini_set('session.sid_bits_per_character', '6');

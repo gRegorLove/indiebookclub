@@ -1,0 +1,150 @@
+{% extends 'layouts/default-layout.twig' %}
+
+{% set short_title = 'New Post' %}
+
+{% block content %}
+
+<h2> {{ short_title }} </h2>
+
+{% include('partials/interactive-messages.twig') %}
+
+<div class="alert alert-success"> <b>Beta:</b> Try creating a post using the new <b><a href="/search">book search</a></b>! </div>
+
+<form method="post" action="{{ path_for('new') }}">
+
+    <div class="compact-form-group">
+        <div class="form-col-1">
+            <label for="i_read_status">Read Status:</label>
+        </div>
+        <div class="form-col-2">
+            <select name="read_status" id="i_read_status" class="shorter-input" required>
+                {% for value,label in options_status %}
+                    <option value="{{ value }}" {{ value == read_status ? 'selected' }}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="compact-form-group">
+        <div class="form-col-1">
+            <label for="i_title">Title:</label>
+        </div>
+        <div class="form-col-2">
+            <input type="text" name="title" id="i_title" value="{{ read_title }}" required>
+        </div>
+    </div>
+
+    <div class="compact-form-group">
+        <div class="form-col-1">
+            <label for="i_authors">Author(s):</label>
+        </div>
+        <div class="form-col-2">
+            <input type="text" name="authors" id="i_authors" value="{{ read_authors }}">
+        </div>
+    </div>
+
+    <div class="compact-form-group">
+        <div class="form-col-1">
+            Identifier:
+        </div>
+        <div class="form-col-2">
+            <input type="radio" name="switch-uid" id="show-isbn" {{ (read_doi is empty or read_isbn) ? 'checked' }}><label for="show-isbn" class="toggle-label">Use ISBN</label>
+
+            <input type="radio" name="switch-uid" id="show-doi" {{ read_doi ? 'checked' }}><label for="show-doi" class="toggle-label">Use DOI Name</label> &nbsp;
+
+            <div class="doi-fieldset" style="margin-block-start: 0.5rem;">
+                <label for="i_doi" class="sr-only">DOI Name:</label>
+                <input type="text" name="doi" id="i_doi" value="{{ read_doi }}" class="util-full-width">
+            </div>
+
+            <div class="isbn-fieldset" style="margin-block-start: 0.5rem;">
+                <label for="i_isbn" class="sr-only">ISBN:</label>
+                <input type="text" name="isbn" id="i_isbn" value="{{ read_isbn }}" class="util-full-width">
+                <span class="help-block">ISBN-13 preferred — ISBN-10 will be converted to ISBN-13.</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="compact-form-group">
+        <div class="form-col-1">
+            <label for="i_category">Tags:</label>
+        </div>
+        <div class="form-col-2">
+            <input type="text" name="category" id="i_category" value="{{ read_tags }}">
+            <span class="help-block">Separate tags with commas</span>
+        </div>
+    </div>
+
+    <details style="margin-bottom: 1rem;">
+        <summary>Advanced Options</summary>
+
+        {% if user.micropub_endpoint %}
+            <div class="compact-form-group"  style="margin-top: 1rem;">
+                <div class="form-col-1">
+                    <label for="i_post_status">Post Status:</label>
+                </div>
+                <div class="form-col-2">
+                    <select name="post_status" id="i_post_status" required class="shorter-input">
+                        {% for value in options_post_status %}
+                            <option value="{{ value }}" {{ value == post_status ? 'selected' }}>{{ value }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        {% else %}
+            <input type="hidden" name="post_status" value="published">
+        {% endif %}
+
+        <div class="compact-form-group">
+            <div class="form-col-1">
+                <label for="i_visibility">Visibility:</label>
+            </div>
+            <div class="form-col-2">
+                <select name="visibility" id="i_visibility" class="shorter-input" required>
+                    {% for label in options_visibility %}
+                        <option value="{{ label }}" {{ label == user.default_visibility ? 'selected' }}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="compact-form-group">
+            <div class="form-col-1">
+                Publish:
+            </div>
+            <div class="form-col-2">
+
+                <input type="radio" name="switch-published" id="hide-datetime" {{ (read_doi is empty or read_isbn) ? 'checked' }}><label for="hide-datetime" class="toggle-label">Now</label>
+
+                <input type="radio" name="switch-published" id="show-datetime" {{ read_doi ? 'checked' }}><label for="show-datetime" class="toggle-label">Select Date and Time</label> &nbsp;
+
+                <div class="published-fieldset">
+                    <input type="datetime-local" name="published" id="i_published" class="shorter-input">
+
+                    <div>
+                        <small><label for="i_tz_offset">Timezone offset from UTC:</label></small>
+                        <input type="text" name="tz_offset" id="i_tz_offset" value="+0000" maxlength="6" style="max-width: 8ch;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </details>
+
+    <input type="submit" value="Post">
+
+    {% if user.micropub_endpoint %}
+    <div class="callout">
+
+        <p>Clicking <b>Post</b> will send a <a href="https://indieweb.org/read" target="_blank" rel="noopener">read</a> post to your Micropub endpoint: <b>{{ user.micropub_endpoint }}</b></P>
+
+        <p>See the <a href="{{ path_for('documentation') }}#micropub">documentation</a> for more information about the request that will be sent.</p>
+
+        <p>If you are experiencing problems with posts not showing up on your site, check the <a href="{{ path_for('settings') }}">settings</a> page for more information, including the last response from your Micropub endpoint.</p>
+
+    </div>
+    {% endif %}
+
+</form>
+
+{% endblock content %}
+

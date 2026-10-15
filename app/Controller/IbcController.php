@@ -29,6 +29,47 @@ use Psr\Http\Message\{
 class IbcController extends Controller
 {
     /**
+     * Handle the search process
+     */
+    public function search(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ) {
+        $validation_errors = [];
+        $page = 1;
+        $limit = 20;
+
+        $search_results = [];
+        $keywords = $request->getQueryParam('keywords');
+        if ($keywords) {
+            $type = $request->getQueryParam('type', 'q');
+            $page = (int) $request->getQueryParam('page', 1);
+            $search_results = $this->utils->searchOpenLibrary(
+                $keywords,
+                $type,
+                $page,
+                $limit
+            );
+            if ($search_results['error'] ?? null) {
+                $validation_errors[] = $search_results['error'];
+            }
+        }
+
+        return $this->view->render(
+            $response,
+            'pages/search.twig',
+            compact(
+                'validation_errors',
+                'search_results',
+                'keywords',
+                'page',
+                'limit',
+            )
+        );
+    }
+
+    /**
      * Handle the new post process
      */
     public function new(
@@ -165,6 +206,8 @@ class IbcController extends Controller
         $read_isbn = $this->utils->sanitize($request->getQueryParam('isbn'));
         $read_doi = $this->utils->sanitize($request->getQueryParam('doi'));
         $read_tags = $this->utils->sanitize($request->getQueryParam('tags'));
+        $read_cover = $this->utils->sanitize($request->getQueryParam('cover_id'));
+        $via = $this->utils->sanitize($request->getQueryParam('via'));
 
         if ($read_of = $request->getQueryParam('read-of')) {
             $parsed = $this->utils->parse_read_of($read_of);
@@ -173,9 +216,14 @@ class IbcController extends Controller
             $read_isbn = $this->utils->sanitize($parsed['uid']);
         }
 
+        $template = 'pages/post-classic.twig';
+        if (strtolower($via) == 'search') {
+            $template = 'pages/post-via-search.twig';
+        }
+
         return $this->view->render(
             $response,
-            'pages/new-post.twig',
+            $template,
             compact(
                 'user',
                 'read_status',
@@ -184,6 +232,7 @@ class IbcController extends Controller
                 'read_isbn',
                 'read_doi',
                 'read_tags',
+                'read_cover',
                 'post_status',
                 'options_status',
                 'options_post_status',
@@ -517,8 +566,10 @@ class IbcController extends Controller
                 'category',
                 'post_status',
                 'visibility',
+                'switch-published',
                 'published',
                 'tz_offset',
+                'image',
             ], 0);
         }
 
@@ -670,6 +721,7 @@ class IbcController extends Controller
             $data['title']
         );
 
+        # build the h-cite for the read-of property
         $cite = [
             'type' => ['h-cite'],
             'properties' => [
@@ -694,6 +746,12 @@ class IbcController extends Controller
             $summary .= sprintf(', ISBN: %s', $data['isbn']);
         }
 
+        # cover image gets set as property in the `read-of`
+        if (array_key_exists('image', $data) && $data['image']) {
+            $cite['properties']['photo'] = [$data['image']];
+        }
+
+        # build the root h-entry properties
         $properties = [
             'summary' => [$summary],
             'read-status' => [$data['read_status']],
@@ -701,6 +759,13 @@ class IbcController extends Controller
             'post-status' => [$data['post_status']],
             'visibility' => [$data['visibility']],
         ];
+
+        # cover image also gets set as `featured` property in the h-entry
+        # consumers more likely to understand this property since
+        # `read-of` is experimental
+        if (array_key_exists('image', $data) && $data['image']) {
+            $properties['featured'] = [$data['image']];
+        }
 
         if (array_key_exists('published', $data) && $data['published']) {
             $properties['published'] = [

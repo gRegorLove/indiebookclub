@@ -27,6 +27,8 @@ $app->get('/documentation', 'PageController:documentation')
 $app->get('/updates', 'PageController:updates')
     ->setName('updates');
 
+$app->map(['GET', 'POST'], '/search', 'IbcController:search')
+    ->setName('search');
 $app->map(['GET', 'POST'], '/new', 'IbcController:new')
     ->setName('new');
 $app->map(['GET', 'POST'], '/retry[/{entry_id}]', 'IbcController:retry')

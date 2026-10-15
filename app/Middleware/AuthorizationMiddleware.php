@@ -16,6 +16,7 @@ class AuthorizationMiddleware
     private $container;
 
     private $authenticated_route_names = [
+        'search',
         'new',
         'delete',
         'settings',

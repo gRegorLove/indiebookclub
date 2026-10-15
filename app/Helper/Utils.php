@@ -289,6 +289,131 @@ class Utils
         return in_array($expected, $scopes);
     }
 
+    public function searchOpenLibrary(
+        string $keywords,
+        string $type = 'title',
+        int $page = 1,
+        int $limit = 20
+    ) {
+        $search_fields = [
+            'key',
+            'author_name',
+            'editions',
+            'editions.title',
+            'editions.author_name',
+            'editions.isbn',
+            'editions.cover_i',
+            'editions.key',
+        ];
+
+        if ($page < 1) {
+            $page = 1;
+        }
+
+        $type = trim(strtolower($type));
+        if (!in_array($type, ['title', 'author', 'isbn', 'q'])) {
+            $type = 'q';
+        }
+
+        /*$params = [
+            'fields' => implode(',', $search_fields),
+            'limit' => $limit,
+            'page' => $page,
+            'lang' => 'en',
+        ];*/
+
+        $endpoint = $this->build_url(
+            'https://openlibrary.org/search.json', [
+                $type => $keywords,
+                'fields' => implode(',', $search_fields),
+                // 'editions.sort' => 'title',
+                'limit' => $limit,
+                'page' => $page,
+                'lang' => 'en',
+            ]
+        );
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $endpoint);
+        curl_setopt($ch, CURLINFO_HEADER_OUT, '1');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            sprintf('User-Agent: %s (%s)',
+                $_ENV['IBC_BASE_URL'],
+                $_ENV['IBC_EMAIL']
+            ),
+            'Accept: application/json',
+        ]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $response = curl_exec($ch);
+        $info = curl_getinfo($ch);
+        // $error = curl_error($ch);
+
+        $http_code = (int) ($info['http_code'] ?? 0);
+        if (200 !== $http_code) {
+            return [
+                'error' => sprintf('Sorry, there was an error searching OpenLibrary. Unexpected HTTP response code: %d',
+                    $http_code
+                )
+            ];
+        }
+
+        $data = [];
+        if ($response) {
+            $data = @json_decode($response, true) ?? [];
+        }
+
+        if (!$data) {
+            return [
+                'error' => 'Sorry, there was an error searching OpenLibrary',
+            ];
+        }
+
+        $results = [
+            'total' => $data['numFound'] ?? 0,
+            'cites' => [],
+        ];
+
+        $docs = $data['docs'] ?? [];
+
+        foreach ($docs as $doc) {
+            $edition = $doc['editions']['docs'][0] ?? null;
+            if (!$edition) {
+                continue;
+            }
+
+            $work_author = implode(',', $doc['author_name'] ?? []);
+            $author_name = implode(',', $edition['author_name'] ?? []);
+            if (!$author_name) {
+                $author_name = $work_author;
+            }
+
+            $cite = [
+                'key' => $doc['key'],
+                'url' => 'https://openlibrary.org' . $doc['key'],
+                'name' => $edition['title'] ?? '',
+                'author' => $author_name,
+            ];
+
+            $isbns = $edition['isbn'] ?? null;
+            if ($isbns) {
+                $cite['isbn'] = $isbns[0];
+            }
+
+            $cover_i = $edition['cover_i'] ?? null;
+            if ($cover_i) {
+                $cite['cover_id'] = $cover_i;
+                $cite['image'] = sprintf('https://covers.openlibrary.org/b/id/%s-M.jpg',
+                    $cover_i
+                );
+            }
+
+            $results['cites'][] = $cite;
+        }
+
+        return $results;
+    }
+
     /**
      * Send a Micropub POST request
      * @param string $endpoint

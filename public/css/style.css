@@ -304,6 +304,11 @@ footer {
     flex-shrink: 0;
 }
 
+img {
+    max-width: 100%;
+    height: auto;
+}
+
 .masthead {
     display: flex;
     align-items: center;
@@ -375,6 +380,17 @@ footer ul {
         background-color: #2C8166;
         color: #eee;
     }
+
+.sr-only {
+    clip: rect(1px, 1px, 1px, 1px);
+    clip-path: inset(50%);
+    height: 1px;
+    width: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+}
 
 .user-bar {
     padding-block: 0.5rem;
@@ -524,6 +540,123 @@ footer ul {
     word-break: break-all;
 }
 
+.search-results {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* search form and posting UI */
+.search-post-ui {
+    display: grid;
+    grid-template-columns: 150px auto; /* 5rem auto */
+    grid-gap: 1rem;
+    padding-block-end: 0.6rem;
+    margin-block-end: 0.6rem;
+    line-height: 1.5;
+}
+
+    /*.search-post-ui:has(form:only-child) {
+        grid-template-columns: 1fr;
+    }*/
+
+    .search-post-ui .form-top {
+        margin-block-start: 1.5rem;
+    }
+
+    .search-post-ui details,
+    .search-post-ui details summary {
+        margin-block-end: 1rem;
+    }
+
+.search-results li {
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #ccc;
+}
+
+    .search-result {
+        display: grid;
+        grid-template-columns: 6rem auto;
+        grid-gap: 1rem;
+    }
+
+    .search-result img {
+        width: 100%;
+        aspect-ratio: 96/145;
+    }
+
+    .search-result a:has(.no-cover) {
+        color: #000;
+        text-decoration: none;
+    }
+
+    .search-result .no-cover,
+    .search-post-ui .no-cover {
+        font-size: 0.8rem;
+        padding: 0.7rem;
+        width: 100%;
+        aspect-ratio: 96/145;
+        background: #eee;
+        text-align: center;
+    }
+
+.shorter-input {
+    max-width: 30ch;
+}
+
+.toggle-label {
+    font-size: 0.875em; /* effective 14px */
+    background: #eee;
+    padding-block: 0.1rem;
+    padding-inline: 0.5rem;
+    border-radius: 0.5rem;
+}
+
+.compact-form-group {
+    display: flex;
+    flex-flow: row wrap;
+    margin: 0 -1rem 0.4rem -1rem;
+}
+
+    .compact-form-group input[type="text"],
+    .compact-form-group input[type="datetime-local"]
+    {
+        padding-inline: 6px;
+        padding-block: 2px;
+        display: block;
+        width: 100%;
+    }
+
+    .compact-form-group select {
+        height: initial !important;
+        padding-inline: 6px;
+        padding-block: 2px;
+        display: block;
+        width: 100%;
+    }
+
+[class*="form-col"] {
+    flex: 0 1 100%;
+    padding: 0 1rem;
+}
+
+@media (min-width: 576px) {
+    .form-col-1 {
+        flex: 0 0 20%;
+        max-width: 20%;
+    }
+
+    .form-col-2 {
+        flex: 0 0 80%;
+        max-width: 80%;
+    }
+
+    .offset-form-col-2 {
+        margin-inline-start: 20%;
+    }
+}
+
 @supports(display: grid) {
     body {
         display: grid;
@@ -569,13 +702,6 @@ footer ul {
 
 }
 
-.toggle-label {
-    font-size: 0.875em; /* effective 14px */
-    background: #eee;
-    padding: 0.5em;
-    border-radius: 0.5rem;
-}
-
 input[name="switch-uid"],
 .doi-fieldset
 {
@@ -602,4 +728,24 @@ input[name="switch-uid"],
     color: #fff;
     border: 0;
 }
+
+input[name="switch-published"],
+.published-fieldset
+{
+    display: none;
+}
+
+    #show-datetime:checked ~ .published-fieldset
+    {
+        display: block;
+        margin-top: 0.5rem;
+    }
+
+    #show-datetime:checked ~ label[for="show-datetime"],
+    #hide-datetime:checked ~ label[for="hide-datetime"]
+    {
+        background: #2C8166;
+        color: #fff;
+        border: 0;
+    }
 

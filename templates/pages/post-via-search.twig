@@ -1,0 +1,136 @@
+{% extends 'layouts/default-layout.twig' %}
+
+{% set short_title = 'New Post' %}
+
+{%- set url_edit = path_for('new', {}, {
+    'title': read_title,
+    'authors': read_authors,
+    'isbn': read_isbn,
+    'cover_id': read_cover,
+    'via': 'manual',
+}) ~%}
+
+{% block content %}
+
+<style>
+</style>
+
+<h2> {{ short_title }} </h2>
+
+{% include('partials/interactive-messages.twig') %}
+
+<div class="alert alert-success"> <b>Almost done!</b> Select the read status, review your post options, then <i>Post</i>. </div>
+
+<form method="post" action="{{ path_for('new') }}" style="padding-block: 1rem;">
+    <div class="search-post-ui">
+        <div>
+            {% if read_cover %}
+                <img width="150" src="https://covers.openlibrary.org/b/id/{{ read_cover }}-M.jpg" alt="book cover">
+                <input type="hidden" name="image" value="https://covers.openlibrary.org/b/id/{{ read_cover }}-M.jpg">
+            {% else %}
+                <div class="no-cover">No cover image</div>
+            {% endif %}
+        </div>
+
+        <div>
+            <input type="hidden" name="title" value="{{ read_title }}">
+
+            <b><cite>{{ read_title }}</cite></b><br>
+            {% if read_authors %}
+                <input type="hidden" name="authors" value="{{ read_authors }}">
+                by {{ read_authors }}<br>
+            {% endif %}
+            {% if read_isbn %}
+                <input type="hidden" name="isbn" value="{{ read_isbn }}">
+                <small>ISBN: {{ read_isbn }}</small><br>
+            {% endif %}
+
+            <small>Want to update this book’s information? <a href="{{ url_edit }}">Switch to the classic form</a></small>
+
+            <div class="form-top">
+                <div class="compact-form-group">
+                    <div class="form-col-1">
+                        <label for="i_read_status">Read Status:</label>
+                    </div>
+                    <div class="form-col-2">
+                        <select name="read_status" id="i_read_status" class="shorter-input" required>
+                            {% for value,label in options_status %}
+                                <option value="{{ value }}" {{ value == read_status ? 'selected' }}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="compact-form-group">
+                    <div class="form-col-1">
+                        <label for="i_category">Tags:</label>
+                    </div>
+                    <div class="form-col-2">
+                        <input type="text" name="category" id="i_category" value="{{ read_tags }}">
+                        <span class="help-block">Separate tags with commas</span>
+                    </div>
+                </div>
+
+                <details>
+                    <summary>Advanced Options</summary>
+
+                    {% if user.micropub_endpoint %}
+                        <div class="compact-form-group">
+                            <div class="form-col-1">
+                                <label for="i_post_status">Post Status:</label>
+                            </div>
+                            <div class="form-col-2">
+                                <select name="post_status" id="i_post_status" class="shorter-input" required>
+                                    {% for value in options_post_status %}
+                                        <option value="{{ value }}" {{ value == post_status ? 'selected' }}>{{ value }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    {% else %}
+                        <input type="hidden" name="post_status" value="published">
+                    {% endif %}
+
+                    <div class="compact-form-group">
+                        <div class="form-col-1">
+                            <label for="i_visibility">Visibility:</label>
+                        </div>
+                        <div class="form-col-2">
+                            <select name="visibility" id="i_visibility" class="shorter-input" required>
+                                {% for label in options_visibility %}
+                                    <option value="{{ label }}" {{ label == user.default_visibility ? 'selected' }}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="compact-form-group">
+                        <div class="form-col-1">
+                            Publish:
+                        </div>
+                        <div class="form-col-2">
+
+                            <input type="radio" name="switch-published" id="hide-datetime" {{ (read_doi is empty or read_isbn) ? 'checked' }}><label for="hide-datetime" class="toggle-label">Now</label>
+
+                            <input type="radio" name="switch-published" id="show-datetime" {{ read_doi ? 'checked' }}><label for="show-datetime" class="toggle-label">Select Date and Time</label> &nbsp;
+
+                            <div class="published-fieldset">
+                                <input type="datetime-local" name="published" id="i_published" class="shorter-input">
+
+                                <div>
+                                    <small><label for="i_tz_offset">Timezone offset from UTC:</label></small>
+                                    <input type="text" name="tz_offset" id="i_tz_offset" value="+0000" maxlength="6" style="max-width: 8ch;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <input type="submit" value="Post">
+            </div>
+
+        </div>
+    </div>
+</form>
+{% endblock content %}
+
