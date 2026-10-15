@@ -771,7 +771,7 @@ class IbcController extends Controller
             $properties['published'] = [
                 $this->Entry->get_datetime_with_offset(
                     $data['published'],
-                    (int) $data['tz_offset']
+                    $this->Entry->tz_offset_to_seconds($data['tz_offset'])
                 ),
             ];
         }
