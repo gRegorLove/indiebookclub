@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3c1380405b90b33ae7debad996fa4b7e",
+    "content-hash": "49530dc2c5c9459adf78fb6c48cb00de",
     "packages": [
         {
             "name": "barnabywalters/mf-cleaner",
@@ -204,22 +204,22 @@
         },
         {
             "name": "indieauth/client",
-            "version": "1.1.6",
+            "version": "v1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/indieweb/indieauth-client-php.git",
-                "reference": "9f3f9cc71a752c371b44d40a979504ffd7026c7d"
+                "reference": "8503c0ca0fbdf808df77dba5b1a3674932fbb0d2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/indieweb/indieauth-client-php/zipball/9f3f9cc71a752c371b44d40a979504ffd7026c7d",
-                "reference": "9f3f9cc71a752c371b44d40a979504ffd7026c7d",
+                "url": "https://api.github.com/repos/indieweb/indieauth-client-php/zipball/8503c0ca0fbdf808df77dba5b1a3674932fbb0d2",
+                "reference": "8503c0ca0fbdf808df77dba5b1a3674932fbb0d2",
                 "shasum": ""
             },
             "require": {
                 "indieweb/representative-h-card": "^0.1.2",
                 "mf2/mf2": "^0.5",
-                "p3k/http": "^0.1",
+                "p3k/http": "^0.1 || ^0.2",
                 "php": ">5.6.0"
             },
             "require-dev": {
@@ -244,7 +244,7 @@
             "description": "IndieAuth Client Library",
             "support": {
                 "issues": "https://github.com/indieweb/indieauth-client-php/issues",
-                "source": "https://github.com/indieweb/indieauth-client-php/tree/1.1.6"
+                "source": "https://github.com/indieweb/indieauth-client-php/tree/v1.2.0"
             },
             "funding": [
                 {
@@ -252,7 +252,7 @@
                     "type": "opencollective"
                 }
             ],
-            "time": "2022-11-08T21:37:04+00:00"
+            "time": "2026-10-02T22:18:02+00:00"
         },
         {
             "name": "indieweb/link-rel-parser",
