@@ -6,9 +6,9 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title><?=$feed_name;?></title>
+    <title>{{ short_title }}</title>
     <base href="{{ getenv('IBC_BASE_URL') }}">
-    <style>{{ inline_css }}</style>
+    <style>{{ inline_css|raw }}</style>
 </head>
 <body>
 
@@ -25,3 +25,4 @@
 
 </body>
 </html>
+

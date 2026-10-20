@@ -195,8 +195,10 @@ class UsersController extends Controller
     /**
      * Route that handles the export page
      */
-    public function export(ServerRequestInterface $request, ResponseInterface $response, array $args)
-    {
+    public function export(
+        ServerRequestInterface $request,
+        ResponseInterface $response
+    ) {
         $profile = $this->User->get($this->utils->session('user_id'));
         if (!$profile) {
             $response = $response->withStatus(500);
