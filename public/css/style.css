@@ -478,6 +478,16 @@ footer ul {
         margin-bottom: 2.5rem;
     }
 
+    .entries .content {
+        display: grid;
+        grid-template-columns: 100px auto;
+        grid-gap: 1rem;
+    }
+
+    .entries .content:has(div:only-child) {
+        grid-template-columns: 1fr;
+    }
+
 .author {
     display: flex;
     background-color: #c1d7e1;

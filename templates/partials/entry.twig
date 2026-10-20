@@ -41,35 +41,42 @@
 
     <div class="content">
 
-        <div class="summary p-summary">
-            {%- include('partials/entries/read-status.twig') -%} <span class="p-read-of h-cite"><cite class="p-name">{{ entry.title }}</cite>{% if entry.authors %} by <span class="p-author">{{ entry.authors}}</span>{% endif %} {% if entry.doi %}<span class="isbn p-uid">doi:{{ entry.doi }}</span>{% elseif entry.isbn %}<span class="isbn">ISBN: <a href="{{ path_for('isbn', {'isbn': entry.isbn}) }}" class="p-uid">{{ entry.isbn }}</a></span>{% endif %}</span>
-        </div>
-        <div class="date">
-            <a href="{{ permalink }}" class="{{ (entry.canonical_url) ? 'u-url u-uid' : 'u-url' }}"><time class="dt-published" datetime="{{ get_entry_date(entry.published, entry.tz_offset)|date('Y-m-d H:i:sO', false) }}">{{ get_entry_date(entry.published, entry.tz_offset)|date('F j, Y g:ia O', false) }}</time></a>
-        </div>
+        {%~ if entry.image ~%}
+            <div><img src="{{ entry.image }}" alt="book cover" width="125"></div>
+        {%~ endif ~%}
 
-        {%~ if entry.category ~%}
-            {%- set tags = entry.category|split(',') -%}
-            <div class="post-meta"> Tags:
-            {%~ for tag in tags -%}
-                <span class="tag p-category">{{ tag }}</span>{% if loop.index != loop.length %}, {% endif %}
-            {%- endfor -%}
+        <div>
+            <div class="summary p-summary">
+                {%- include('partials/entries/read-status.twig') -%} <span class="p-read-of h-cite"><cite class="p-name">{{ entry.title }}</cite>{% if entry.authors %} by <span class="p-author">{{ entry.authors}}</span>{% endif %} {% if entry.doi %}<span class="isbn p-uid">doi:{{ entry.doi }}</span>{% elseif entry.isbn %}<span class="isbn">ISBN: <a href="{{ path_for('isbn', {'isbn': entry.isbn}) }}" class="p-uid">{{ entry.isbn }}</a></span>{% endif %}</span>
             </div>
-        {%~ endif ~%}
+            <div class="date">
+                <a href="{{ permalink }}" class="{{ (entry.canonical_url) ? 'u-url u-uid' : 'u-url' }}"><time class="dt-published" datetime="{{ get_entry_date(entry.published, entry.tz_offset)|date('Y-m-d H:i:sO', false) }}">{{ get_entry_date(entry.published, entry.tz_offset)|date('F j, Y g:ia O', false) }}</time></a>
+            </div>
 
-        {%~ if entry.visibility != 'public' ~%}
-            <div class="post-meta">Visibility: {{ entry.visibility }} {% if entry.visibility == 'private' %}🔒{% elseif entry.visibility == 'unlisted' %}👻{% endif %}</div>
-        {%~ endif ~%}
+            {%~ if entry.category ~%}
+                {%- set tags = entry.category|split(',') -%}
+                <div class="post-meta"> Tags:
+                {%~ for tag in tags -%}
+                    <span class="tag p-category">{{ tag }}</span>{% if loop.index != loop.length %}, {% endif %}
+                {%- endfor -%}
+                </div>
+            {%~ endif ~%}
 
-        {%~ if not is_caching ~%}
-            {%- if session('me') -%}
-            <div class="post-meta mb-1"><a href="{{ url_add }}">➕ Add to my list</a></div>
-            {%- endif -%}
+            {%~ if entry.visibility != 'public' ~%}
+                <div class="post-meta">Visibility: {{ entry.visibility }} {% if entry.visibility == 'private' %}🔒{% elseif entry.visibility == 'unlisted' %}👻{% endif %}</div>
+            {%~ endif ~%}
 
-            {%- if is_own_post -%}
-            <div class="post-meta"><a href="{{ path_for('delete', {'id': entry.id}) }}">🗑️ Delete</a></div>
-            {%- endif -%}
-        {%~ endif ~%}
+            {%~ if not is_caching ~%}
+                {%- if session('me') -%}
+                <div class="post-meta mb-1"><a href="{{ url_add }}">➕ Add to my list</a></div>
+                {%- endif -%}
+
+                {%- if is_own_post -%}
+                <div class="post-meta"><a href="{{ path_for('delete', {'id': entry.id}) }}">🗑️ Delete</a></div>
+                {%- endif -%}
+            {%~ endif ~%}
+        </div>
+
     </div>
 </li>
 
