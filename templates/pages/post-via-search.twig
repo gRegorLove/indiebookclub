@@ -23,6 +23,7 @@
         <div>
             {% if read_cover %}
                 <img width="150" src="https://covers.openlibrary.org/b/id/{{ read_cover }}-M.jpg" alt="book cover">
+                <input type="hidden" name="cover_id" value="{{ read_cover }}">
                 <input type="hidden" name="image" value="https://covers.openlibrary.org/b/id/{{ read_cover }}-M.jpg">
             {% else %}
                 <div class="no-cover">No cover image</div>
@@ -123,6 +124,7 @@
                     </div>
                 </details>
 
+                <input type="hidden" name="via" value="search">
                 <input type="submit" value="Post">
             </div>
 

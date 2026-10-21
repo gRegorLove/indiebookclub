@@ -33,8 +33,7 @@ class IbcController extends Controller
      */
     public function search(
         ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
+        ResponseInterface $response
     ) {
         $validation_errors = [];
         $page = 1;
@@ -74,8 +73,7 @@ class IbcController extends Controller
      */
     public function new(
         ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
+        ResponseInterface $response
     ) {
         $user = $this->User->get($this->utils->session('user_id'));
         $validation_errors = [];
@@ -110,12 +108,6 @@ class IbcController extends Controller
                         $data['micropub_success'] = 1;
                     }
 
-                    # DEBUG
-                    // $response_body = 'debug';
-                    // $canonical_url = $data['canonical_url'] = 'https://example.com/debug';
-                    // $data['micropub_success'] = 1;
-                    // $data['post_status'] = 'published';
-
                     # Update user
                     $user = $this->User->update(
                         $this->utils->session('user_id'),
@@ -134,7 +126,7 @@ class IbcController extends Controller
                             $url = $canonical_url;
                         }
 
-                        return $response->withRedirect($url, 302);
+                        return $response->withRedirect($url, 303);
                     }
 
                     # continue to add entry to IBC at this point
@@ -173,48 +165,57 @@ class IbcController extends Controller
                     $url = $entry['canonical_url'];
                 }
 
-                return $response->withRedirect($url, 302);
+                return $response->withRedirect($url, 303);
+            }
+
+            $read_title = $this->utils->sanitize($data['title']);
+            $read_authors = $this->utils->sanitize($data['authors']);
+            $read_isbn = $this->utils->sanitize($data['isbn']);
+            $read_doi = $this->utils->sanitize($data['doi']);
+            $read_tags = $this->utils->sanitize($data['category']);
+            $read_cover = $this->utils->sanitize($data['cover_id']);
+            $post_status = $this->utils->sanitize($data['post_status']);
+            $via = $this->utils->sanitize($data['via']);
+        } elseif ($request->isGet()) {
+            $post_status = null;
+            if ($this->utils->hasScope($user['token_scope'], 'draft')) {
+                $post_status = 'draft';
+            }
+
+            if ($temp_status = $request->getQueryParam('post-status')) {
+                $post_status = strtolower($temp_status);
+                if (!in_array($post_status, $this->utils->get_post_status_options())) {
+                    $post_status = 'published';
+                }
+            }
+
+            if ($read_status = $request->getQueryParam('read-status')) {
+                $read_status = strtolower($read_status);
+            }
+
+            if (!in_array($read_status, ['to-read', 'reading', 'finished'])) {
+                $read_status = 'to-read';
+            }
+
+            $read_title = $this->utils->sanitize($request->getQueryParam('title'));
+            $read_authors = $this->utils->sanitize($request->getQueryParam('authors'));
+            $read_isbn = $this->utils->sanitize($request->getQueryParam('isbn'));
+            $read_doi = $this->utils->sanitize($request->getQueryParam('doi'));
+            $read_tags = $this->utils->sanitize($request->getQueryParam('tags'));
+            $read_cover = $this->utils->sanitize($request->getQueryParam('cover_id'));
+            $via = $this->utils->sanitize($request->getQueryParam('via'));
+
+            if ($read_of = $request->getQueryParam('read-of')) {
+                $parsed = $this->utils->parse_read_of($read_of);
+                $read_title = $this->utils->sanitize($parsed['title']);
+                $read_authors = $this->utils->sanitize($parsed['authors']);
+                $read_isbn = $this->utils->sanitize($parsed['uid']);
             }
         }
 
         $options_status = $this->utils->get_read_status_options();
         $options_post_status = $this->utils->get_post_status_options();
         $options_visibility = $this->utils->get_visibility_options($user);
-
-        $post_status = null;
-        if ($this->utils->hasScope($user['token_scope'], 'draft')) {
-            $post_status = 'draft';
-        }
-
-        if ($temp_status = $request->getQueryParam('post-status')) {
-            $post_status = strtolower($temp_status);
-            if (!in_array($post_status, $this->utils->get_post_status_options())) {
-                $post_status = 'published';
-            }
-        }
-
-        if ($read_status = $request->getQueryParam('read-status')) {
-            $read_status = strtolower($read_status);
-        }
-
-        if (!in_array($read_status, ['to-read', 'reading', 'finished'])) {
-            $read_status = 'to-read';
-        }
-
-        $read_title = $this->utils->sanitize($request->getQueryParam('title'));
-        $read_authors = $this->utils->sanitize($request->getQueryParam('authors'));
-        $read_isbn = $this->utils->sanitize($request->getQueryParam('isbn'));
-        $read_doi = $this->utils->sanitize($request->getQueryParam('doi'));
-        $read_tags = $this->utils->sanitize($request->getQueryParam('tags'));
-        $read_cover = $this->utils->sanitize($request->getQueryParam('cover_id'));
-        $via = $this->utils->sanitize($request->getQueryParam('via'));
-
-        if ($read_of = $request->getQueryParam('read-of')) {
-            $parsed = $this->utils->parse_read_of($read_of);
-            $read_title = $this->utils->sanitize($parsed['title']);
-            $read_authors = $this->utils->sanitize($parsed['authors']);
-            $read_isbn = $this->utils->sanitize($parsed['uid']);
-        }
 
         $template = 'pages/post-classic.twig';
         if (strtolower($via) == 'search') {
@@ -321,7 +322,7 @@ class IbcController extends Controller
             $url = $entry['canonical_url'];
         }
 
-        return $response->withRedirect($url, 302);
+        return $response->withRedirect($url, 303);
     }
 
     public function delete(
@@ -382,7 +383,7 @@ class IbcController extends Controller
                 $this->Entry->delete($entry_id);
 
                 $url = $this->router->pathFor('profile', ['domain' => $profile['profile_slug']]);
-                return $response->withRedirect($url, 302);
+                return $response->withRedirect($url, 303);
             }
 
         } elseif ($request->isGet()) {
@@ -575,6 +576,8 @@ class IbcController extends Controller
                 'published',
                 'tz_offset',
                 'image',
+                'cover_id',
+                'via',
             ], 0);
         }
 
@@ -617,6 +620,15 @@ class IbcController extends Controller
             } catch (Exception $e) {
                 $errors[] = 'The <i>Published</i> datetime appears to be invalid';
             }
+        }
+
+        if (array_key_exists('image', $data)) {
+             $image = filter_var($data['image'], FILTER_VALIDATE_URL);
+             if (false === $image) {
+                $errors[] = '<i>Cover Image</i> is not a valid OpenLibrary URL';
+             } elseif (strpos($image, 'https://covers.openlibrary.org/') !== 0) {
+                $errors[] = '<i>Cover Image</i> only supports OpenLibrary URLs';
+             }
         }
 
         return $errors;
