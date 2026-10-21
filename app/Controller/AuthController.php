@@ -114,11 +114,13 @@ class AuthController extends Controller
         $revocation_endpoint = Client::discoverRevocationEndpoint($me);
         $micropub_endpoint = Client::discoverMicropubEndpoint($me);
         $is_micropub_user = ($authorization_endpoint && $token_endpoint && $micropub_endpoint);
+        $is_indielogin_fallback = false;
 
         if ($is_micropub_user) {
             list($authorization_url, $error) = Client::begin($me, 'create draft profile');
         } else {
             if (!$authorization_endpoint) {
+                $is_indielogin_fallback = true;
                 $authorization_endpoint = 'https://indielogin.com/auth';
             }
 
@@ -137,6 +139,11 @@ class AuthController extends Controller
         $_SESSION['micropub_endpoint'] = $micropub_endpoint;
         $_SESSION['token_endpoint'] = $token_endpoint;
         $_SESSION['revocation_endpoint'] = $revocation_endpoint;
+
+        if ($is_indielogin_fallback) {
+            // reset so the fallback endpoint is not shown in debug info
+            $authorization_endpoint = '';
+        }
 
         $user = $this->User->findBySlug($hostname);
         if ($user) {
