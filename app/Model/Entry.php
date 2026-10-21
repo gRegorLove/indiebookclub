@@ -20,6 +20,30 @@ class Entry
 {
     private $table_name = 'entries';
 
+    private array $fields_overview = [
+        'e.id',
+        'e.read_status',
+        'e.title',
+        'e.authors',
+        'e.isbn',
+        'e.doi',
+        'e.url',
+        'e.category',
+        'e.published',
+        'e.tz_offset',
+        'e.visibility',
+        'e.image',
+        'e.content',
+        'e.canonical_url',
+        'e.micropub_success',
+        'e.user_id',
+        'profile_name' => "IF(u.name = '', u.profile_slug, u.name)",
+        'profile_url' => 'u.url',
+        'profile_photo_url' => 'u.photo_url',
+        'u.profile_slug',
+        'user_type' => 'u.type',
+    ];
+
     public function add(array $data): ?array
     {
         $dt_published = new DateTime();
@@ -99,29 +123,7 @@ class Entry
     {
         $record = ORM::for_table($this->table_name)
             ->table_alias('e')
-            ->select_many_expr([
-                'e.id',
-                'e.read_status',
-                'e.title',
-                'e.authors',
-                'e.isbn',
-                'e.doi',
-                'e.url',
-                'e.category',
-                'e.published',
-                'e.tz_offset',
-                'e.visibility',
-                'e.image',
-                'e.content',
-                'e.canonical_url',
-                'e.micropub_success',
-                'e.user_id',
-                'profile_name' => "IF(u.name = '', u.profile_slug, u.name)",
-                'profile_url' => 'u.url',
-                'profile_photo_url' => 'u.photo_url',
-                'u.profile_slug',
-                'user_type' => 'u.type',
-            ])
+            ->select_many_expr($this->fields_overview)
             ->join('users', ['e.user_id', '=', 'u.id'], 'u')
             ->where('e.id', $id)
             ->where('e.user_id', $user_id)
@@ -156,29 +158,7 @@ class Entry
     ): array {
         $records = ORM::for_table($this->table_name)
             ->table_alias('e')
-            ->select_many_expr([
-                'e.id',
-                'e.read_status',
-                'e.title',
-                'e.authors',
-                'e.isbn',
-                'e.doi',
-                'e.url',
-                'e.category',
-                'e.published',
-                'e.tz_offset',
-                'e.visibility',
-                'e.image',
-                'e.content',
-                'e.canonical_url',
-                'e.micropub_success',
-                'e.user_id',
-                'profile_name' => "IF(u.name = '', u.profile_slug, u.name)",
-                'profile_url' => 'u.url',
-                'profile_photo_url' => 'u.photo_url',
-                'u.profile_slug',
-                'user_type' => 'u.type',
-            ])
+            ->select_many_expr($this->fields_overview)
             ->join('users', ['e.user_id', '=', 'u.id'], 'u')
             ->where('e.user_id', $user_id)
             ->where_not_equal('e.visibility', 'unlisted');
@@ -200,29 +180,7 @@ class Entry
     ): array {
         $records = ORM::for_table($this->table_name)
             ->table_alias('e')
-            ->select_many_expr([
-                'e.id',
-                'e.read_status',
-                'e.title',
-                'e.authors',
-                'e.isbn',
-                'e.doi',
-                'e.url',
-                'e.category',
-                'e.published',
-                'e.tz_offset',
-                'e.visibility',
-                'e.image',
-                'e.content',
-                'e.canonical_url',
-                'e.micropub_success',
-                'e.user_id',
-                'profile_name' => "IF(u.name = '', u.profile_slug, u.name)",
-                'profile_url' => 'u.url',
-                'profile_photo_url' => 'u.photo_url',
-                'u.profile_slug',
-                'user_type' => 'u.type',
-            ])
+            ->select_many_expr($this->fields_overview)
             ->join('users', ['e.user_id', '=', 'u.id'], 'u')
             ->where('e.isbn', $isbn)
             ->where_not_equal('e.visibility', 'unlisted');
@@ -241,29 +199,7 @@ class Entry
     {
         return ORM::for_table($this->table_name)
             ->table_alias('e')
-            ->select_many_expr([
-                'e.id',
-                'e.read_status',
-                'e.title',
-                'e.authors',
-                'e.isbn',
-                'e.doi',
-                'e.url',
-                'e.category',
-                'e.published',
-                'e.tz_offset',
-                'e.visibility',
-                'e.image',
-                'e.content',
-                'e.canonical_url',
-                'e.micropub_success',
-                'e.user_id',
-                'profile_name' => "IF(u.name = '', u.profile_slug, u.name)",
-                'profile_url' => 'u.url',
-                'profile_photo_url' => 'u.photo_url',
-                'u.profile_slug',
-                'user_type' => 'u.type',
-            ])
+            ->select_many_expr($this->fields_overview)
             ->join('users', ['e.user_id', '=', 'u.id'], 'u')
             ->where('e.user_id', $user_id)
             ->order_by_desc('published')
