@@ -75,7 +75,7 @@ class UsersController extends Controller
         $id = (int) $args['entry'];
         $user_id = (int) $profile['id'];
 
-        $entry = $this->Entry->getUserEntry($id, $user_id);
+        $entry = $this->Entry->getOverview($id, $user_id);
         if (!$entry) {
             return $response->withStatus(404);
         }

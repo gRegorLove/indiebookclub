@@ -258,7 +258,7 @@ class IbcController extends Controller
         $user = $this->User->get($this->utils->session('user_id'));
 
         $entry_id = (int) $args['entry_id'];
-        $entry = $this->Entry->getUserEntry($entry_id, $this->utils->session('user_id'));
+        $entry = $this->Entry->getOverview($entry_id, $this->utils->session('user_id'));
         if (!$entry) {
             return $response->withStatus(404);
         }
@@ -351,7 +351,7 @@ class IbcController extends Controller
             if (count($errors) === 0) {
                 # double check: can only delete own posts
                 $entry_id = (int) $data['id'];
-                $entry = $this->Entry->getUserEntry($entry_id, $this->utils->session('user_id'));
+                $entry = $this->Entry->getOverview($entry_id, $this->utils->session('user_id'));
                 if (!$entry) {
                     $response = $response->withStatus(403);
                     return $this->view->render($response, 'pages/400.twig');
@@ -391,7 +391,7 @@ class IbcController extends Controller
                 return $response->withStatus(404);
             }
 
-            $entry = $this->Entry->getUserEntry($id, $this->utils->session('user_id'));
+            $entry = $this->Entry->getOverview($id, $this->utils->session('user_id'));
             if (!$entry) {
                 return $response->withStatus(404);
             }
@@ -644,25 +644,20 @@ class IbcController extends Controller
     protected function cache_entry(int $id): bool
     {
         try {
-            $entry = $this->Entry->get($id);
+            $entry = $this->Entry->getOverview($id);
             if (!$entry) {
                 throw new Exception('Could not load entry');
-            }
-
-            $profile = $this->User->get((int) $entry['user_id']);
-            if (!$profile) {
-                throw new Exception('Could not load user');
             }
 
             $is_caching = true;
             $src = $this->view->fetch(
                 'partials/entry.twig',
-                compact('entry', 'profile', 'is_caching')
+                compact('entry', 'is_caching')
             );
 
             $file_path = sprintf('%s/cache/%s-%d.html',
                 APP_DIR,
-                $profile['profile_slug'],
+                $entry['profile_slug'],
                 $id
             );
 

@@ -117,6 +117,40 @@ class Entry
     }
 
     /**
+     * Get the overview for an entry, including the poster's profile
+     * Used during caching and in the template partials/entry.twig
+     *
+     * If $user_id is provided, also ensures the post belongs to that User
+     */
+    public function getOverview(
+        int $id,
+        ?int $user_id = null
+    ): ?array {
+        $record = ORM::for_table($this->table_name)
+            ->table_alias('e')
+            ->select_many_expr($this->fields_overview)
+            ->join(
+                'users',
+                ['e.user_id', '=', 'u.id'],
+                'u'
+            )
+            ->where('e.id', $id);
+
+        if ($user_id) {
+            $record->where('e.user_id', $user_id);
+        }
+
+        $record = $record->find_one();
+
+        if ($record) {
+            return $record->as_array();
+        }
+
+        return null;
+    }
+
+    /**
+     * DEPRECATED
      * Get an entry by id + user_id
      */
     public function getUserEntry(int $id, int $user_id): ?array
