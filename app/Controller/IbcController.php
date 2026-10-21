@@ -386,7 +386,12 @@ class IbcController extends Controller
             }
 
         } elseif ($request->isGet()) {
-            $entry = $this->Entry->getUserEntry((int) $args['id'], $this->utils->session('user_id'));
+            $id = (int) ($args['id'] ?? 0);
+            if (!$id) {
+                return $response->withStatus(404);
+            }
+
+            $entry = $this->Entry->getUserEntry($id, $this->utils->session('user_id'));
             if (!$entry) {
                 return $response->withStatus(404);
             }

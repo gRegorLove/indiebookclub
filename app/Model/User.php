@@ -150,7 +150,7 @@ class User
     public function findBySlug(string $slug): ?array
     {
         $record = ORM::for_table($this->table_name)
-            ->select_many([
+            ->select_many_expr([
                 'id',
                 'type',
                 'url',

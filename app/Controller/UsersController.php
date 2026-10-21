@@ -62,8 +62,11 @@ class UsersController extends Controller
     /**
      * Route that handles an individual entry
      */
-    public function entry(ServerRequestInterface $request, ResponseInterface $response, array $args)
-    {
+    public function entry(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ) {
         $profile = $this->User->findBySlug($args['domain']);
         if (!$profile) {
             return $response->withStatus(404);
