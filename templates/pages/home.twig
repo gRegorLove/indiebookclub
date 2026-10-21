@@ -16,7 +16,7 @@
         {% if session('me') %}
         <p> You are signed in as {% if session('display_photo') %}<img src="{{ session('display_photo') }}" alt="profile photo for" style="height: 1em;">{% endif %} <b>{{ session('display_name') }}</b> • <a href="{{ path_for('profile', {'domain': session('hostname')}) }}">My Profile</a> • <a href="{{ path_for('signout') }}">Sign Out</a> </p>
 
-        <form method="get" action="/new" style="text-align: center;"><button>New Post</button></form>
+        <form method="get" action="{{ path_for('search') }}" style="text-align: center;"><button>New Post</button></form>
         {% else %}
         <p>To use indiebookclub, sign in with your domain. If your website supports <a href="https://micropub.net">Micropub</a>, it will post directly to your site. Otherwise, it will post to your profile on this website.</p>
 
