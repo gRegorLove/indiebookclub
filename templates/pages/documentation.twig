@@ -42,7 +42,7 @@
         <p> <code>featured</code>: If you use the <a href="{{ path_for('search') }}">book search</a> and Open Library has a cover image, this property will be the cover image URL. This URL is also sent in the <code>read-of.photo</code> property. Note: indiebookclub does not attempt to upload the image to your media endpoint. </p>
 
         <h3 id="query"> Query Parameters </h3>
-        <p> The <a href="{{ path_for('new') }}">classic post</a> form accepts URL query parameters to pre-populate fields. This can be used with bookmarklets to make adding new posts easier. </p>
+        <p> The <a href="{{ path_for('new') }}">classic post</a> form accepts URL query parameters to pre-populate fields. This can be used with <a href="#bookmarklets">bookmarklets</a> to make adding new posts easier. </p>
         <p> <b>Parameters</b> </p>
         <p> Any combination of these parameters can be used. </p>
         <ul>
@@ -59,6 +59,23 @@
         <p> You can provide a URL in the <code>read-of</code> parameter. If indiebookclub finds a <code>read-of</code> microformat at that URL, it will pre-populate the form with that information. If no <code>read-of</code> property is found, it will check for an <code>h-cite</code> microformat. </p>
         <p> Note that if the <code>read-of</code> query parameter is provided, it takes precedence over the other parameters listed above. </p>
     </div>
+
+    <h3 id="bookmarklets"> Bookmarklets </h3>
+    <p> Drag these links to your browser to make it easier to add posts. You can also use the source code in a <a href="https://caiorss.github.io/bookmarklet-maker/">bookmarklet editor</a> to customize them. </p>
+
+    <p> <b><a href="javascript:(function()%7Blet%20%5Btitle%2C%20authors%5D%3Ddocument.querySelector('meta%5Bproperty%3D%22og%3Atitle%22%5D').attributes%5B'content'%5D.textContent.split('%20a%20book%20by%20')%3B%20let%20isbn%3Ddocument.querySelector('meta%5Bproperty%3D%22book%3Aisbn%22%5D').attributes%5B'content'%5D.textContent%3B%20let%20s%3Dnew%20URLSearchParams(%7Btitle%3A%20title%20%3F%3F%20''%2C%20authors%3A%20authors%20%3F%3F%20''%2C%20isbn%3A%20isbn%20%3F%3F%20''%7D)%3B%20window.location%3D'https%3A%2F%2F{{ getenv('IBC_HOSTNAME') }}%2Fnew%3F'%2Bs.toString()%3B%7D)()%3B">Add to indiebookclub from Bookshop.org</a></b> </p>
+
+    <details>
+        <summary>Javascript source:</summary>
+        <pre>let [title, authors]=document.querySelector('meta[property="og:title"]').attributes['content'].textContent.split(' a book by '); let isbn=document.querySelector('meta[property="book:isbn"]').attributes['content'].textContent; let s=new URLSearchParams({title: title ?? '', authors: authors ?? '', isbn: isbn ?? ''}); window.location='https://{{ getenv('IBC_HOSTNAME') }}/new?'+s.toString();</pre>
+    </details>
+
+    <p> <b><a href="javascript:(function()%7Blet%20b%3DJSON.parse(document.querySelector('script%5Btype%3D%22application%2Fld%2Bjson%22%5D').textContent)%3B%0Alet%20s%3Dnew%20URLSearchParams(%7Btitle%3A%20b.name%2C%20isbn%3A%20b.isbn%2C%20authors%3A%20b.author%5B0%5D%5B'name'%5D%7D)%3B%0Awindow.location%3D'https%3A%2F%2F{{ getenv('IBC_HOSTNAME') }}%2Fnew%3F'%2Bs.toString()%3B%7D)()">Add to indiebookclub from Goodreads.com</a></b> </p>
+
+    <details>
+        <summary>Javascript source:</summary>
+        <pre>let b=JSON.parse(document.querySelector('script[type="application/ld+json"]').textContent); let s=new URLSearchParams({title: b.name ?? '', isbn: b.isbn ?? '', authors: b.author[0]['name'] ?? ''}); window.location='https://{{ getenv('IBC_HOSTNAME') }}/new?'+s.toString();</pre>
+    </details>
 
     <h3 id="export"> Export Posts </h3>
     <p> Your <a href="{{ path_for('settings') }}">settings</a> page has a button to download an HTML+<a href="https://microformats.org/">microformats</a> export of your posts. </p>
