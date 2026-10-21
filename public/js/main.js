@@ -7,10 +7,12 @@ function ready(fn) {
 }
 
 ready(function() {
-    var d = new Date();
     var el = document.querySelector('#i_tz_offset');
-    var offset = tz_seconds_to_offset(d.getTimezoneOffset() * 60 * -1);
-    el.value = offset;
+    if (el) {
+        var d = new Date();
+        var offset = tz_seconds_to_offset(d.getTimezoneOffset() * 60 * -1);
+        el.value = offset;
+    }
 });
 
 function tz_seconds_to_offset(seconds) {
