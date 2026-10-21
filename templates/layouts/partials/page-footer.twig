@@ -4,7 +4,7 @@
             <nav>
                 <ul>
                     {%- if session('me') ~%}
-                    <li><a href="{{ path_for('new') }}">New Post</a></li>
+                    <li><a href="{{ path_for('search') }}">New Post</a></li>
                     {%- endif ~%}
                     <li><a href="{{ path_for('about') }}">About</a></li>
                     <li><a href="{{ path_for('documentation') }}">Documentation</a></li>

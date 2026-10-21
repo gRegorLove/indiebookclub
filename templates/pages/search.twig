@@ -1,6 +1,9 @@
 {% extends 'layouts/default-layout.twig' %}
 
 {% set short_title = 'Search' %}
+{% if search_results.total is defined %}
+    {% set short_title = 'Search Results' %}
+{% endif %}
 
 {% block content %}
 
@@ -53,6 +56,8 @@
 
     <input type="submit" value="Search">
 </form>
+
+<p> Or <a href="{{ path_for('new') }}">switch to the classic form</a>. </p>
 
 <p> Search uses <a href="https://openlibrary.org/">Open Library</a>, an initiative of <a href="https://archive.org/">Internet Archive</a>. See their <a href="https://archive.org/about/terms">privacy policy</a>. </p>
 

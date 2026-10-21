@@ -14,7 +14,7 @@
 
 <div class="h-feed">
     {%~ if session('me') -%}
-        <form method="get" action="{{ path_for('new') }}" style="text-align: center;"><button>New Post</button></form>
+        <form method="get" action="{{ path_for('search') }}" style="text-align: center;"><button>New Post</button></form>
     {%- endif ~%}
 
     <h2 class="p-name">{{ short_title }}</h2>
