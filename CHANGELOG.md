@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4]
+### Added
+- Book search using Open Library
+
 ## [0.1.3] 2024-06-15
 ### Changed
 - Added client metadata JSON endpoint and updated client_id in IndieAuth requests
