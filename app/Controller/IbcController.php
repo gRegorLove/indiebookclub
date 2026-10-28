@@ -101,14 +101,9 @@ class IbcController extends Controller
                     );
 
                     $response_body = trim($mp_response['response']);
+                    $http_status = (int) $mp_response['code'];
 
-                    $canonical_url = null;
-                    if (isset($mp_response['headers']['Location'])) {
-                        $canonical_url = $data['canonical_url'] = $mp_response['headers']['Location'][0];
-                        $data['micropub_success'] = 1;
-                    }
-
-                    # Update user
+                    # Update user's last micropub response
                     $user = $this->User->update(
                         $this->utils->session('user_id'),
                         [
@@ -116,21 +111,39 @@ class IbcController extends Controller
                         ]
                     );
 
+                    if (!in_array($http_status, [201, 202])) {
+                        return $this->view->render(
+                            $response,
+                            'pages/400.twig',
+                            [
+                                'short_title' => 'Micropub Error',
+                                'message' => sprintf('<p> Your Micropub endpoint responded with HTTP %s when a 201 or 202 is expected. You can view the last response headers on your <a href="/settings">settings</a> page. </p>',
+                                    $http_status
+                                ),
+                            ]
+                        );
+                    }
+
+                    $canonical_url = $mp_response['headers']['Location'][0] ?? null;
+                    if (!$canonical_url) {
+                        return $this->view->render(
+                            $response,
+                            'pages/400.twig',
+                            [
+                                'short_title' => 'Micropub Error',
+                                'message' => '<p> Your Micropub endpoint did not respond with a Location header. You can view the last response headers on your <a href="/settings">settings</a> page. </p>',
+                            ]
+                        );
+                    }
+
                     if ('draft' == $data['post_status']) {
                         # drafts are only sent to Micropub endpoint, not stored on IBC
-
-                        # default redirect: IBC profile
-                        $url = $this->router->pathFor('profile', ['domain' => $user['profile_slug']]);
-                        if ($canonical_url) {
-                            # redirect to canonical
-                            $url = $canonical_url;
-                        }
-
-                        return $response->withRedirect($url, 303);
+                        return $response->withRedirect($canonical_url, 303);
                     }
 
                     # continue to add entry to IBC at this point
-
+                    $data['micropub_success'] = 1;
+                    $data['canonical_url'] = $canonical_url;
                     $data['micropub_response'] = $response_body;
                 }
 
