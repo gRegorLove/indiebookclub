@@ -60,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for micropub delete after re-authorizing and granting `delete` scope [#13](https://github.com/gRegorLove/indiebookclub/issues/13)
 
 
+[Unreleased]: https://github.com/gRegorLove/indiebookclub/compare/v0.1.4...HEAD
 [0.1.4]: https://github.com/gRegorLove/indiebookclub/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/gRegorLove/indiebookclub/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/gRegorLove/indiebookclub/compare/v0.1.1...v0.1.2
