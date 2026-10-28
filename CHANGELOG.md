@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.4]
 ### Added
 - Book search using Open Library
+- Bookmarklets for bookshop.org and goodreads.com [#22](https://github.com/gRegorLove/indiebookclub/issues/22)
+
+### Fixed
+- Timezone offset bug [#28](https://github.com/gRegorLove/indiebookclub/issues/28)
+- Twig template for exports
+- Javascript error in console
+- Debugging information when using indielogin.com [#26](https://github.com/gRegorLove/indiebookclub/issues/26)
 
 ## [0.1.3] 2024-06-15
 ### Changed
@@ -51,4 +58,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Support for micropub `visibility` property [#4](https://github.com/gRegorLove/indiebookclub/issues/4)
 - Support for micropub delete after re-authorizing and granting `delete` scope [#13](https://github.com/gRegorLove/indiebookclub/issues/13)
+
+
+[0.1.4]: https://github.com/gRegorLove/indiebookclub/compare/v0.1.3...v0.1.4
+[0.1.3]: https://github.com/gRegorLove/indiebookclub/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/gRegorLove/indiebookclub/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/gRegorLove/indiebookclub/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/gRegorLove/indiebookclub/tree/v0.1.0
 
