@@ -8,7 +8,7 @@ return [
         'offline' => false,
         'developer_ip' => '127.0.0.1',
         'developer_domains' => [
-            'example.com',
+            'gregorlove.com',
         ],
         'displayErrorDetails' => ($_ENV['APP_ENV'] !== 'production'),
         'determineRouteBeforeAppMiddleware' => true,

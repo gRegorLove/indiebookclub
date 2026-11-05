@@ -13,7 +13,7 @@ try {
         require $cached_env_file;
     } else {
         # otherwise, increase error_reporting
-        error_reporting(E_ALL & ~E_DEPRECATED);
+        error_reporting(E_ALL);
         ini_set('display_errors', '1');
 
         # and load from .env file

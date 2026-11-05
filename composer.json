@@ -1,5 +1,6 @@
 {
   "require": {
+    "php": ">=8.2.35",
     "slim/slim": "^3.13",
     "slim/twig-view": "^2.5",
     "j4mie/idiorm": "^1.5",
