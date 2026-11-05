@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Book search using Open Library
 - Bookmarklets for bookshop.org and goodreads.com [#22](https://github.com/gRegorLove/indiebookclub/issues/22)
 
+### Changed
+- Improve micropub error handling [#27](https://github.com/gRegorLove/indiebookclub/issues/27)
+
 ### Fixed
 - Timezone offset bug [#28](https://github.com/gRegorLove/indiebookclub/issues/28)
 - Twig template for exports

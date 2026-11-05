@@ -63,6 +63,13 @@ class AuthController extends Controller
     ) {
         // Attempt to normalize the 'me' parameter or display an error
         $me = $request->getQueryParam('me', '');
+        if (is_numeric($me)) {
+            return $this->httpErrorResponse(
+                $response,
+                'The URL you entered is not valid.'
+            );
+        }
+
         $me = Client::normalizeMeURL(trim($me));
         if (false === $me) {
             return $this->httpErrorResponse(
@@ -267,7 +274,7 @@ class AuthController extends Controller
         unset($_SESSION['token_endpoint']);
 
         # default redirect
-        $redirect_url = $this->router->pathFor('new');
+        $redirect_url = $this->router->pathFor('search');
 
         if ($signin_redirect = $this->utils->session('signin_redirect')) {
             # override with redirect that was previously sanitized and verified
