@@ -1,6 +1,6 @@
 {
   "require": {
-    "slim/slim": "^3.0",
+    "slim/slim": "^3.13",
     "slim/twig-view": "^2.5",
     "j4mie/idiorm": "^1.5",
     "mf2/mf2": "^0.5",
@@ -9,7 +9,7 @@
     "vlucas/phpdotenv": "^5.5",
     "monolog/monolog": "^1.23",
     "phpmailer/phpmailer": "^6.6",
-    "phpunit/phpunit": "^8.4"
+    "phpunit/phpunit": "^10"
   },
   "autoload": {
     "psr-4": {
