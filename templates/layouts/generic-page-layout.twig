@@ -14,13 +14,13 @@
     <link rel="icon" href="/images/book.png">
     <link rel="apple-touch-icon-precomposed" href="/images/book.png" />
     <link rel="stylesheet" href="https://unpkg.com/sanitize.css" />
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="{{ cache_busted('/css/style.css') }}">
 {% endblock headLinks %}
 
 
 {# -- Any JavaScript that should be included before </head> -- #}
 {% block headJs %}
-    <script src="/js/main.js"></script>
+    <script src="{{ cache_busted('/js/main.js') }}"></script>
 {% endblock headJs %}
 
 

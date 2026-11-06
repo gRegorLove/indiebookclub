@@ -121,6 +121,23 @@ $container['view'] = function ($c) {
     );
 
     $environment->addFunction(
+        new TwigFunction('cache_busted', function (string $relative_path) use ($settings) {
+            $public_path = $settings['theme']['public_path']; # default
+
+            $path = $public_path . '/' . ltrim($relative_path, '/');
+            if (file_exists($path)) {
+                echo sprintf('%s?v=%s',
+                    $relative_path,
+                    md5((string) filemtime($path))
+                );
+                return;
+            }
+
+            echo $relative_path;
+        })
+    );
+
+    $environment->addFunction(
         new TwigFunction('debug', function($debug = null) {
             if (!is_null($debug)) {
                 echo sprintf('<details><summary>Debugging</summary> <pre>%s</pre></details>',
