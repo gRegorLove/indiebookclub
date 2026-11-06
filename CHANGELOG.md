@@ -6,13 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.4]
+## [0.1.4] 2026-11-06
 ### Added
 - Book search using Open Library
 - Bookmarklets for bookshop.org and goodreads.com [#22](https://github.com/gRegorLove/indiebookclub/issues/22)
 
 ### Changed
 - Improve micropub error handling [#27](https://github.com/gRegorLove/indiebookclub/issues/27)
+- Updated dependencies and minimum PHP version to 8.2.35
 
 ### Fixed
 - Timezone offset bug [#28](https://github.com/gRegorLove/indiebookclub/issues/28)

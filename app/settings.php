@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 return [
     'settings' => [
-        'version' => '0.1.4-dev',
+        'version' => '0.1.4',
         'offline' => false,
         'developer_ip' => '127.0.0.1',
         'developer_domains' => [
-            'gregorlove.com',
+            'example.com',
         ],
         'displayErrorDetails' => ($_ENV['APP_ENV'] !== 'production'),
         'determineRouteBeforeAppMiddleware' => true,
