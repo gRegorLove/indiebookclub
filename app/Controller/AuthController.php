@@ -39,8 +39,7 @@ class AuthController extends Controller
 
     public function client_metadata(
         ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
+        ResponseInterface $response
     ) {
         return $response->withJson([
             'client_id' => $_ENV['IBC_BASE_URL'] . '/id',
@@ -58,8 +57,7 @@ class AuthController extends Controller
      */
     public function start(
         ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
+        ResponseInterface $response
     ) {
         // Attempt to normalize the 'me' parameter or display an error
         $me = $request->getQueryParam('me', '');
@@ -181,8 +179,7 @@ class AuthController extends Controller
      */
     public function callback(
         ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
+        ResponseInterface $response
     ) {
         $this->initClient();
 
@@ -290,8 +287,7 @@ class AuthController extends Controller
      */
     public function re_authorize(
         ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
+        ResponseInterface $response
     ) {
         $user = $this->User->get($this->utils->session('user_id'));
 
@@ -343,8 +339,7 @@ class AuthController extends Controller
      */
     public function reset(
         ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
+        ResponseInterface $response
     ) {
         $this->User->reset($this->utils->session('user_id'));
         return $response->withRedirect($this->router->pathFor('signout'), 302);
@@ -355,8 +350,7 @@ class AuthController extends Controller
      */
     public function signout(
         ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
+        ResponseInterface $response
     ) {
         if (!$this->utils->session('user_id')) {
             # already signed out

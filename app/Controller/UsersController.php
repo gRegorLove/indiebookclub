@@ -125,8 +125,10 @@ class UsersController extends Controller
     /**
      * Route that handles the settings page
      */
-    public function settings(ServerRequestInterface $request, ResponseInterface $response, array $args)
-    {
+    public function settings(
+        ServerRequestInterface $request,
+        ResponseInterface $response
+    ) {
         $validation_errors = [];
         $user = $this->User->get($this->utils->session('user_id'));
         $options_visibility = $this->utils->get_visibility_options($user);
@@ -169,8 +171,11 @@ class UsersController extends Controller
     /**
      * Route that handles the settings/update POST request
      */
-    public function settings_update(ServerRequestInterface $request, ResponseInterface $response, array $args)
-    {
+    public function settings_update(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        array $args
+    ) {
         $data = $request->getParsedBody();
 
         if (!$this->validate_post_request($data)) {
@@ -251,7 +256,7 @@ class UsersController extends Controller
             if (file_put_contents($file_path, $src) === false) {
                 $this->logger->error(
                     'Error caching profile.',
-                    compact('args')
+                    [$this->utils->session('user_id')]
                 );
 
                 $response = $response->withStatus(500);

@@ -23,8 +23,7 @@ class PageController extends Controller
      */
     public function index(
         ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
+        ResponseInterface $response
     ) {
         $show_signin_prompt = false;
         if ($this->utils->session('signin_prompt')) {
@@ -44,8 +43,7 @@ class PageController extends Controller
      */
     public function about(
         ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
+        ResponseInterface $response
     ) {
         return $this->view->render($response, 'pages/about.twig');
     }
@@ -55,8 +53,7 @@ class PageController extends Controller
      */
     public function documentation(
         ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
+        ResponseInterface $response
     ) {
         return $this->view->render($response, 'pages/documentation.twig');
     }
@@ -66,8 +63,7 @@ class PageController extends Controller
      */
     public function updates(
         ServerRequestInterface $request,
-        ResponseInterface $response,
-        array $args
+        ResponseInterface $response
     ) {
         return $this->view->render($response, 'pages/updates.twig');
     }

@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Middleware;
 
-// use InvalidArgumentException;
 use Exception;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\{
